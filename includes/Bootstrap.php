@@ -56,11 +56,9 @@ final class Bootstrap
      */
     public static function boot(): void
     {
-        load_plugin_textdomain(
-            'caidance-ai-readiness',
-            false,
-            dirname(CAIDANCE_AIR_BASENAME) . '/languages'
-        );
+        // Translation loading: WP.org auto-loads translations from the
+        // plugin slug since WP 4.6 — no manual load_plugin_textdomain()
+        // call needed when the plugin is hosted on WP.org.
 
         // REST endpoint must register on every request (wp-json context
         // is not is_admin). Permission_callback gates actual usage.

@@ -33,7 +33,7 @@ final class CheckResult
     ) {
         if (!isset(self::SCORE_BY_STATUS[$status])) {
             throw new \InvalidArgumentException(
-                'CheckResult: unknown status "' . $status . '"'
+                'CheckResult: unknown status "' . esc_html($status) . '"'
             );
         }
     }

@@ -107,6 +107,7 @@ final class SettingsPage
         $industry       = (string) get_option('caidance_air_industry', '');
         $crawlerEnabled = get_option('caidance_air_ai_crawler_check_enabled', '1') === '1';
         $lastScan       = (string) get_option('caidance_air_last_scan', '');
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display flag for the post-save redirect notice; no data processing.
         $justSaved      = isset($_GET['caidance-air-saved']) && $_GET['caidance-air-saved'] === '1';
 
         ?>
