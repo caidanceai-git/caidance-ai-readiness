@@ -68,10 +68,14 @@ final class Bootstrap
 
         // WP-CLI smoke-test command. Lets us run a scan from SSH and
         // see the raw JSON output, before any UI button is wired.
+        // Closure form bypasses WP-CLI's CommandFactory (which would
+        // try to instantiate LocalScanner with no args and fatal).
         if (defined('WP_CLI') && WP_CLI && class_exists('\WP_CLI')) {
             \WP_CLI::add_command(
                 'caidance-air scan',
-                [LocalScanner::class, 'cliRun']
+                static function (array $args, array $assoc_args): void {
+                    LocalScanner::cliRun($args, $assoc_args);
+                }
             );
         }
     }
