@@ -17,6 +17,9 @@ declare(strict_types=1);
 
 namespace Caidance\AiReadiness\Admin;
 
+use Caidance\AiReadiness\Rendering\ResultRenderer;
+use Caidance\AiReadiness\Storage\ScanHistoryRepository;
+
 final class SettingsPage
 {
     public const MENU_SLUG    = 'caidance-ai-readiness';
@@ -173,9 +176,7 @@ final class SettingsPage
             <hr />
 
             <h2><?php esc_html_e('Run a scan', 'caidance-ai-readiness'); ?></h2>
-            <p>
-                <?php esc_html_e('The scan engine ships in the next plugin update. Your industry selection above will be applied to your first scan.', 'caidance-ai-readiness'); ?>
-            </p>
+            <?php $this->renderScanSection($industry); ?>
 
             <hr />
 
@@ -190,6 +191,118 @@ final class SettingsPage
             </p>
         </div>
         <?php
+    }
+
+    /**
+     * Renders the Run-scan surface: empty state if no industry is set,
+     * otherwise the button + container for results + the latest scan's
+     * results pulled from storage (so a refresh shows what was already
+     * scanned).
+     */
+    private function renderScanSection(string $industry): void
+    {
+        if ($industry === '') {
+            ?>
+            <p><em><?php esc_html_e('Pick your industry above before running a scan.', 'caidance-ai-readiness'); ?></em></p>
+            <?php
+            return;
+        }
+
+        $latest = (new ScanHistoryRepository())->getLatest();
+
+        $endpoint = rest_url('caidance-air/v1/scan');
+        $nonce    = wp_create_nonce('wp_rest');
+        ?>
+        <p>
+            <button
+                type="button"
+                id="caidance-air-run-scan"
+                class="button button-primary"
+                data-endpoint="<?php echo esc_attr($endpoint); ?>"
+                data-nonce="<?php echo esc_attr($nonce); ?>"
+                data-label-idle="<?php esc_attr_e('Run scan now', 'caidance-ai-readiness'); ?>"
+                data-label-running="<?php esc_attr_e('Scanning…', 'caidance-ai-readiness'); ?>"
+            >
+                <?php esc_html_e('Run scan now', 'caidance-ai-readiness'); ?>
+            </button>
+            <span id="caidance-air-scan-status" style="margin-left:10px;color:#646970;"></span>
+        </p>
+
+        <div id="caidance-air-results">
+            <?php
+            if (is_array($latest) && isset($latest['results']) && is_array($latest['results'])) {
+                echo $this->renderLatestResults($latest); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            } else {
+                echo '<p><em>' . esc_html__('No scan has run yet. Click Run scan now to start.', 'caidance-ai-readiness') . '</em></p>';
+            }
+            ?>
+        </div>
+
+        <script>
+        (function () {
+            var btn = document.getElementById('caidance-air-run-scan');
+            var status = document.getElementById('caidance-air-scan-status');
+            if (!btn) { return; }
+            btn.addEventListener('click', function () {
+                var labelRunning = btn.getAttribute('data-label-running');
+                var labelIdle = btn.getAttribute('data-label-idle');
+                var endpoint = btn.getAttribute('data-endpoint');
+                var nonce = btn.getAttribute('data-nonce');
+                btn.disabled = true;
+                btn.textContent = labelRunning;
+                status.textContent = '';
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': nonce,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function (response) {
+                    if (!response.ok) {
+                        return response.text().then(function (t) {
+                            throw new Error('HTTP ' + response.status + ': ' + t.slice(0, 200));
+                        });
+                    }
+                    return response.json();
+                }).then(function () {
+                    status.textContent = 'Scan complete. Reloading…';
+                    window.location.reload();
+                }).catch(function (e) {
+                    btn.disabled = false;
+                    btn.textContent = labelIdle;
+                    status.textContent = 'Scan failed: ' + e.message;
+                });
+            });
+        })();
+        </script>
+        <?php
+    }
+
+    /**
+     * Builds the HTML for a stored scan result: score badge + per-check
+     * rows. Returns raw HTML for echoing (caller is responsible).
+     *
+     * @param array<string, mixed> $latest
+     */
+    private function renderLatestResults(array $latest): string
+    {
+        $score   = (int) ($latest['total_score'] ?? 0);
+        $max     = (int) ($latest['max_possible'] ?? 0);
+        $band    = (string) ($latest['band'] ?? 'starter');
+        $ranAt   = (string) ($latest['ran_at'] ?? '');
+        $results = is_array($latest['results'] ?? null) ? $latest['results'] : [];
+
+        $html  = '<h3 style="margin-top:24px;">Latest scan</h3>';
+        $html .= '<p style="color:#646970;">Ran at <code>' . esc_html($ranAt) . '</code></p>';
+        $html .= '<p>' . ResultRenderer::renderScoreBadge($score, $max, $band) . '</p>';
+
+        foreach ($results as $result) {
+            if (is_array($result)) {
+                $html .= ResultRenderer::renderResultRow($result);
+            }
+        }
+
+        return $html;
     }
 
     /**

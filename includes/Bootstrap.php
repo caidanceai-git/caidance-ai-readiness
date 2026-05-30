@@ -13,6 +13,7 @@ namespace Caidance\AiReadiness;
 use Caidance\AiReadiness\Admin\DashboardWidget;
 use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
+use Caidance\AiReadiness\Rest\ScanController;
 use Caidance\AiReadiness\Scanner\LocalScanner;
 
 final class Bootstrap
@@ -59,6 +60,10 @@ final class Bootstrap
             false,
             dirname(CAIDANCE_AIR_BASENAME) . '/languages'
         );
+
+        // REST endpoint must register on every request (wp-json context
+        // is not is_admin). Permission_callback gates actual usage.
+        (new ScanController())->register();
 
         if (is_admin()) {
             (new SettingsPage())->register();

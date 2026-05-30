@@ -14,6 +14,9 @@ declare(strict_types=1);
 
 namespace Caidance\AiReadiness\Admin;
 
+use Caidance\AiReadiness\Rendering\ResultRenderer;
+use Caidance\AiReadiness\Storage\ScanHistoryRepository;
+
 final class ToolsPage
 {
     public const MENU_SLUG = 'caidance-ai-readiness-tools';
@@ -41,8 +44,10 @@ final class ToolsPage
         }
 
         $industry    = (string) get_option('caidance_air_industry', '');
-        $lastScan    = (string) get_option('caidance_air_last_scan', '');
         $settingsUrl = admin_url('options-general.php?page=' . SettingsPage::MENU_SLUG);
+        $repo        = new ScanHistoryRepository();
+        $latest      = $repo->getLatest();
+        $history     = $repo->getHistory();
 
         ?>
         <div class="wrap">
@@ -60,24 +65,46 @@ final class ToolsPage
                         ?>
                     </p>
                 </div>
-            <?php elseif ($lastScan === ''): ?>
+            <?php elseif (!is_array($latest)): ?>
+                <p><?php esc_html_e('No scan has run yet.', 'caidance-ai-readiness'); ?></p>
                 <p>
-                    <?php esc_html_e('No scan has run yet. The scan engine ships in the next plugin update.', 'caidance-ai-readiness'); ?>
+                    <a class="button button-primary" href="<?php echo esc_url($settingsUrl); ?>">
+                        <?php esc_html_e('Go to Settings → Run scan now', 'caidance-ai-readiness'); ?>
+                    </a>
                 </p>
-            <?php else: ?>
-                <p>
+            <?php else:
+                $score   = (int) ($latest['total_score'] ?? 0);
+                $max     = (int) ($latest['max_possible'] ?? 0);
+                $band    = (string) ($latest['band'] ?? 'starter');
+                $ranAt   = (string) ($latest['ran_at'] ?? '');
+                $results = is_array($latest['results'] ?? null) ? $latest['results'] : [];
+                ?>
+                <p style="margin-top:16px;">
+                    <?php echo ResultRenderer::renderScoreBadge($score, $max, $band); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </p>
+                <p style="color:#646970;">
                     <?php
                     printf(
                         /* translators: %s is the last-scan timestamp wrapped in a code tag. */
                         esc_html__('Last scan: %s', 'caidance-ai-readiness'),
-                        '<code>' . esc_html($lastScan) . '</code>'
+                        '<code>' . esc_html($ranAt) . '</code>'
                     );
                     ?>
+                    &nbsp;&middot;&nbsp;
+                    <a href="<?php echo esc_url($settingsUrl); ?>"><?php esc_html_e('Re-run scan on Settings', 'caidance-ai-readiness'); ?></a>
                 </p>
-                <p>
-                    <em><?php esc_html_e('Full results rendering ships with the scan engine in the next plugin update.', 'caidance-ai-readiness'); ?></em>
-                </p>
-            <?php endif; ?>
+
+                <h2 style="margin-top:24px;"><?php esc_html_e('All checks', 'caidance-ai-readiness'); ?></h2>
+                <?php
+                foreach ($results as $result) {
+                    if (is_array($result)) {
+                        echo ResultRenderer::renderResultRow($result); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    }
+                }
+
+                echo ResultRenderer::renderScoreHistory($history, 4); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            endif;
+            ?>
 
             <hr />
 
