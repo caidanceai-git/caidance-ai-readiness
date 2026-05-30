@@ -15,6 +15,7 @@ use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
 use Caidance\AiReadiness\Rest\ScanController;
 use Caidance\AiReadiness\Scanner\LocalScanner;
+use Caidance\AiReadiness\Storage\ScanHistoryRepository;
 
 final class Bootstrap
 {
@@ -65,6 +66,10 @@ final class Bootstrap
         // is not is_admin). Permission_callback gates actual usage.
         (new ScanController())->register();
 
+        // Weekly cron handler. Scheduled in onActivation; this is the
+        // listener that actually runs the scan when WP-Cron fires.
+        add_action('caidance_air_weekly_scan', [self::class, 'runScheduledScan']);
+
         if (is_admin()) {
             (new SettingsPage())->register();
             (new DashboardWidget())->register();
@@ -83,5 +88,37 @@ final class Bootstrap
                 }
             );
         }
+    }
+
+    /**
+     * Cron callback for caidance_air_weekly_scan.
+     *
+     * Skips if no industry is set (a scan would be unhelpful without
+     * industry context). Also throttles to at most one auto-scan per
+     * 6 days, so accidental WP-Cron double-fires don't double-scan and
+     * burn the history slots.
+     *
+     * Manual scans via the Settings page / REST endpoint / WP-CLI
+     * bypass this throttle — they're explicit user actions.
+     */
+    public static function runScheduledScan(): void
+    {
+        $industry = (string) get_option('caidance_air_industry', '');
+        if ($industry === '') {
+            return;
+        }
+
+        $repo   = new ScanHistoryRepository();
+        $latest = $repo->getLatest();
+
+        if (is_array($latest) && isset($latest['ran_at'])) {
+            $lastRanAt = strtotime((string) $latest['ran_at']);
+            if ($lastRanAt !== false && (time() - $lastRanAt) < (6 * DAY_IN_SECONDS)) {
+                return;
+            }
+        }
+
+        $result = LocalScanner::buildDefault()->run();
+        $repo->saveScan($result);
     }
 }

@@ -104,7 +104,7 @@ final class AuthorSchemaCheck extends AbstractCheck
         if ($personAuthors === $articleSampled) {
             return $this->pass(
                 sprintf(
-                    'All %d sampled posts have a structured Person author. Strong E-E-A-T signals.',
+                    'Structured Person author found on every sampled post (%d checked). Strong E-E-A-T signals.',
                     $articleSampled
                 )
             );

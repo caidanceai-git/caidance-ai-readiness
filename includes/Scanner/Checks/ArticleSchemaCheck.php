@@ -99,7 +99,7 @@ final class ArticleSchemaCheck extends AbstractCheck
         if ($withCompleteSchema === $sampled) {
             return $this->pass(
                 sprintf(
-                    'All %d recent posts publish Article schema with author and datePublished. AI agents can cite your blog content.',
+                    'Article schema with author and datePublished is present on every sampled recent post (%d checked). AI agents can cite your blog content.',
                     $sampled
                 )
             );
@@ -108,7 +108,7 @@ final class ArticleSchemaCheck extends AbstractCheck
         if ($withCompleteSchema > 0) {
             return $this->partial(
                 sprintf(
-                    'Only %d of %d recent posts have complete Article schema. The rest are missing author or datePublished.',
+                    'Article schema is incomplete: %d of %d sampled recent posts have author and datePublished. The rest are missing one or both.',
                     $withCompleteSchema,
                     $sampled
                 ),
@@ -118,7 +118,7 @@ final class ArticleSchemaCheck extends AbstractCheck
 
         return $this->fail(
             sprintf(
-                'None of the %d sampled recent posts have complete Article schema.',
+                'No sampled recent posts have complete Article schema (%d checked).',
                 $sampled
             ),
             'Enable Article schema in your SEO plugin (Yoast → Search Appearance → Content Types → Posts; Rank Math → Titles & Meta → Posts).'
