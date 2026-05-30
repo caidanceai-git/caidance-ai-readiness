@@ -1,5 +1,5 @@
 === Caidance — AI-Readiness Score ===
-Contributors: caidanceai
+Contributors: caidance
 Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
