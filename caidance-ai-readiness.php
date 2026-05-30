@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Caidance — AI-Readiness Score
- * Plugin URI:  https://caidance.ai/
+ * Plugin URI:  https://caidance.ai/cdi/?utm_source=wp_plugin&utm_medium=plugin_header&utm_campaign=wp_org_v1
  * Description: See what AI says about your site. Scans your WordPress site for AI-readiness signals (schema, llms.txt, AI crawler access) and shows your CDI-aligned 0–60 score with the top 3 fixes. Powered by Caidance.
  * Version:     1.0.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author:      Caidance
- * Author URI:  https://caidance.ai/
+ * Author URI:  https://caidance.ai/?utm_source=wp_plugin&utm_medium=author_header&utm_campaign=wp_org_v1
  * License:     GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: caidance-ai-readiness
