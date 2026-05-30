@@ -22,9 +22,14 @@ namespace Caidance\AiReadiness\Scanner;
 
 use Caidance\AiReadiness\Http\SiteFetcher;
 use Caidance\AiReadiness\Scanner\Checks\AiCrawlerCheck;
+use Caidance\AiReadiness\Scanner\Checks\ArticleSchemaCheck;
+use Caidance\AiReadiness\Scanner\Checks\AuthorSchemaCheck;
 use Caidance\AiReadiness\Scanner\Checks\CheckInterface;
+use Caidance\AiReadiness\Scanner\Checks\FaqSchemaCheck;
 use Caidance\AiReadiness\Scanner\Checks\LlmsTxtCheck;
+use Caidance\AiReadiness\Scanner\Checks\OrganizationSchemaCheck;
 use Caidance\AiReadiness\Scanner\Checks\RobotsSitemapCheck;
+use Caidance\AiReadiness\Scanner\Checks\WebSiteSchemaCheck;
 
 final class LocalScanner
 {
@@ -118,6 +123,13 @@ final class LocalScanner
 
         $scanner->registerCheck(new LlmsTxtCheck($fetcher));
         $scanner->registerCheck(new RobotsSitemapCheck($fetcher));
+
+        // Schema family — share the cached homepage + recent-post fetches.
+        $scanner->registerCheck(new OrganizationSchemaCheck($fetcher));
+        $scanner->registerCheck(new WebSiteSchemaCheck($fetcher));
+        $scanner->registerCheck(new FaqSchemaCheck($fetcher));
+        $scanner->registerCheck(new ArticleSchemaCheck($fetcher));
+        $scanner->registerCheck(new AuthorSchemaCheck($fetcher));
 
         $aiCrawlerEnabled = get_option('caidance_air_ai_crawler_check_enabled', '1') === '1';
         if ($aiCrawlerEnabled) {
