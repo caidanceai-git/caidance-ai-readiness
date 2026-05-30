@@ -13,6 +13,7 @@ namespace Caidance\AiReadiness;
 use Caidance\AiReadiness\Admin\DashboardWidget;
 use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
+use Caidance\AiReadiness\Scanner\LocalScanner;
 
 final class Bootstrap
 {
@@ -63,6 +64,15 @@ final class Bootstrap
             (new SettingsPage())->register();
             (new DashboardWidget())->register();
             (new ToolsPage())->register();
+        }
+
+        // WP-CLI smoke-test command. Lets us run a scan from SSH and
+        // see the raw JSON output, before any UI button is wired.
+        if (defined('WP_CLI') && WP_CLI && class_exists('\WP_CLI')) {
+            \WP_CLI::add_command(
+                'caidance-air scan',
+                [LocalScanner::class, 'cliRun']
+            );
         }
     }
 }
