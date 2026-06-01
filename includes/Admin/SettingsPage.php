@@ -51,6 +51,30 @@ final class SettingsPage
         add_action('admin_menu', [$this, 'registerMenu']);
         add_action('admin_init', [$this, 'handleFormSubmit']);
         add_action('admin_notices', [$this, 'maybeShowWelcomeNotice']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
+    }
+
+    /**
+     * Enqueues the Run-scan JS only on our Settings → Caidance screen.
+     * Per WP.org plugin guidelines, inline <script> tags are not
+     * permitted in plugins; JS must be registered + enqueued so
+     * WordPress can manage dependencies, versioning, and async/defer.
+     *
+     * @param string $hookSuffix The current admin screen hook suffix.
+     */
+    public function enqueueAssets(string $hookSuffix): void
+    {
+        if ($hookSuffix !== 'settings_page_' . self::MENU_SLUG) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'caidance-air-admin-scan',
+            plugins_url('assets/js/admin-scan.js', CAIDANCE_AIR_FILE),
+            [],
+            CAIDANCE_AIR_VERSION,
+            true
+        );
     }
 
     public function registerMenu(): void
@@ -239,44 +263,12 @@ final class SettingsPage
             ?>
         </div>
 
-        <script>
-        (function () {
-            var btn = document.getElementById('caidance-air-run-scan');
-            var status = document.getElementById('caidance-air-scan-status');
-            if (!btn) { return; }
-            btn.addEventListener('click', function () {
-                var labelRunning = btn.getAttribute('data-label-running');
-                var labelIdle = btn.getAttribute('data-label-idle');
-                var endpoint = btn.getAttribute('data-endpoint');
-                var nonce = btn.getAttribute('data-nonce');
-                btn.disabled = true;
-                btn.textContent = labelRunning;
-                status.textContent = '';
-                fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'X-WP-Nonce': nonce,
-                        'Content-Type': 'application/json'
-                    }
-                }).then(function (response) {
-                    if (!response.ok) {
-                        return response.text().then(function (t) {
-                            throw new Error('HTTP ' + response.status + ': ' + t.slice(0, 200));
-                        });
-                    }
-                    return response.json();
-                }).then(function () {
-                    status.textContent = 'Scan complete. Reloading…';
-                    window.location.reload();
-                }).catch(function (e) {
-                    btn.disabled = false;
-                    btn.textContent = labelIdle;
-                    status.textContent = 'Scan failed: ' + e.message;
-                });
-            });
-        })();
-        </script>
         <?php
+        // Run-scan JS is registered and enqueued via enqueueAssets()
+        // above (admin_enqueue_scripts hook, gated to this settings
+        // screen). Source: assets/js/admin-scan.js. The button's
+        // data-* attributes carry all runtime config (endpoint, nonce,
+        // labels) — no localize call needed.
     }
 
     /**
