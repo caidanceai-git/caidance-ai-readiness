@@ -17,6 +17,7 @@ namespace Caidance\AiReadiness\Admin;
 
 use Caidance\AiReadiness\Fixer\FixRegistry;
 use Caidance\AiReadiness\Rendering\ResultRenderer;
+use Caidance\AiReadiness\Scanner\StackDetector;
 use Caidance\AiReadiness\Storage\EvidenceLog;
 use Caidance\AiReadiness\Storage\ScanHistoryRepository;
 
@@ -58,7 +59,20 @@ final class ToolsPage
 
             <?php $this->renderFixNotice(); ?>
 
-            <?php if ($industry === ''): ?>
+            <?php
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch; no data processing.
+            $tab      = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'scan';
+            $scanUrl  = add_query_arg(['page' => self::MENU_SLUG], admin_url('tools.php'));
+            $stackUrl = add_query_arg(['page' => self::MENU_SLUG, 'tab' => 'stack'], admin_url('tools.php'));
+            ?>
+            <h2 class="nav-tab-wrapper" style="margin-bottom:16px;">
+                <a class="nav-tab <?php echo $tab !== 'stack' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url($scanUrl); ?>"><?php esc_html_e('Scan results', 'caidance-ai-readiness'); ?></a>
+                <a class="nav-tab <?php echo $tab === 'stack' ? 'nav-tab-active' : ''; ?>" href="<?php echo esc_url($stackUrl); ?>"><?php esc_html_e('Stack', 'caidance-ai-readiness'); ?></a>
+            </h2>
+
+            <?php if ($tab === 'stack'): ?>
+                <?php $this->renderStackTab(); ?>
+            <?php elseif ($industry === ''): ?>
                 <div class="notice notice-warning inline">
                     <p>
                         <?php
@@ -144,6 +158,66 @@ final class ToolsPage
                 );
                 ?>
             </p>
+        </div>
+        <?php
+    }
+
+    /**
+     * Renders the Stack Sense tab: the categorized plugin inventory,
+     * qualitative observations (normalized-signal shaped — never a
+     * score; the scored systems diagnostic is the Alignment Review on
+     * caidance.ai), and the Alignment Review deep-link carrying the
+     * detected-stack prefill params. Detection is local and read-only.
+     */
+    private function renderStackTab(): void
+    {
+        $detector  = new StackDetector();
+        $inventory = $detector->inventory();
+        $grouped   = $detector->categories($inventory);
+        $latest    = (new ScanHistoryRepository())->getLatest();
+        $signals   = $detector->signals($inventory, $latest);
+
+        $severityColors = ['info' => '#646970', 'notice' => '#2271b1', 'warning' => '#dba617'];
+
+        $ctaUrl = add_query_arg(
+            array_merge($detector->prefillParams($inventory), [
+                'utm_source'   => 'wp_plugin',
+                'utm_medium'   => 'plugin_stack',
+                'utm_campaign' => 'wp_v14_stack_sense',
+            ]),
+            'https://caidance.ai/alignment-assessment/'
+        );
+        ?>
+        <h2 style="margin-top:8px;"><?php esc_html_e('Your WordPress stack, as an AI operator sees it', 'caidance-ai-readiness'); ?></h2>
+        <p style="color:#646970;max-width:860px;"><?php esc_html_e('Detected locally from your active plugins — nothing leaves your site. These are observations, not a score: the scored systems diagnostic is the Alignment Review on caidance.ai.', 'caidance-ai-readiness'); ?></p>
+
+        <?php if ($inventory === []): ?>
+            <p><em><?php esc_html_e('None of the plugins from the curated stack table are active — a very lean install.', 'caidance-ai-readiness'); ?></em></p>
+        <?php else: ?>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;max-width:860px;margin:0 0 18px;">
+                <?php foreach ($grouped as $category => $names): ?>
+                    <div style="border:1px solid #c3c4c7;border-radius:4px;padding:12px 14px;background:#fff;">
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#646970;margin-bottom:6px;"><?php echo esc_html((string) (StackDetector::CATEGORY_LABELS[$category] ?? $category)); ?></div>
+                        <div style="color:#1d2327;"><?php echo esc_html(implode(', ', $names)); ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <h3><?php esc_html_e('Observations', 'caidance-ai-readiness'); ?></h3>
+        <?php foreach ($signals as $signal): ?>
+            <div style="border:1px solid #c3c4c7;border-left:4px solid <?php echo esc_attr($severityColors[(string) $signal['severity']] ?? '#646970'); ?>;border-radius:4px;padding:12px 14px;margin:0 0 10px;background:#fff;max-width:860px;">
+                <p style="margin:0 0 6px;color:#1d2327;"><strong><?php echo esc_html((string) $signal['evidence']); ?></strong></p>
+                <?php if ((string) $signal['recommended_fix'] !== ''): ?>
+                    <p style="margin:0;color:#646970;font-size:13px;"><?php echo esc_html((string) $signal['recommended_fix']); ?></p>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+
+        <div style="border:1px solid #c3c4c7;border-left:4px solid #2271b1;border-radius:4px;padding:16px 18px;margin:18px 0 0;background:#f0f6fc;max-width:860px;">
+            <h3 style="margin:0 0 8px;"><?php esc_html_e('Want the full picture?', 'caidance-ai-readiness'); ?></h3>
+            <p style="margin:0 0 12px;color:#1d2327;"><?php esc_html_e('This is the surface read — what is visible from inside WordPress. The $149 Alignment Review maps your whole stack, including the tools beyond WordPress, and returns stack-specific findings with a 0–60 Alignment Score. It arrives already knowing what was detected here: the first questions come pre-filled.', 'caidance-ai-readiness'); ?></p>
+            <a class="button button-primary" href="<?php echo esc_url($ctaUrl); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Run my Alignment Review', 'caidance-ai-readiness'); ?></a>
         </div>
         <?php
     }

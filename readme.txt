@@ -4,7 +4,7 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -47,6 +47,10 @@ Every fix follows the same flow: preview the exact change → approve → Caidan
 
 And the weekly scan now watches for **drift**: if an applied fix stops holding — a deploy removed your llms.txt, a migration reverted robots.txt — Caidance flags it and offers the one-click re-apply.
 
+= Stack Sense — your stack, as an AI operator sees it =
+
+The Tools page gains a **Stack** tab: your active plugins mapped into ten categories (forms, CRM, email, automation, SEO, and more) plus a handful of plain-English observations — two form plugins means intake is split; an automation plugin means alignment matters more, not less. Detected locally, nothing leaves your site, and deliberately unscored: the scored systems diagnostic is the Alignment Review on caidance.ai, which the Stack tab can pre-fill with what it detected.
+
 = Industry-aware fix list =
 
 Pick your industry from 11 options — Financial Services, Healthcare, Legal, Home Services, Nonprofit, Professional Services, Manufacturing, eCommerce, SaaS, Education, Local Retail & Restaurants — and the fix recommendations are tailored. The fix you see is the fix that actually matters in your industry.
@@ -84,6 +88,10 @@ Only the three fixes above, and only with your approval: it can create an llms.t
 = Will the fixes overwrite my files or conflict with my SEO plugin? =
 
 No. Every fix is conflict-aware. llms.txt is create-only — an existing file or a plugin serving one is left alone. robots.txt edits never touch groups that cover non-AI crawlers, and the original file is stored for byte-for-byte restore. Schema output defers to Yoast SEO, Rank Math, All in One SEO, The SEO Framework, SEOPress, and Slim SEO — and goes silent automatically if you install one later.
+
+= Does the Stack tab send my plugin list anywhere? =
+
+No. Stack detection runs locally against your own active-plugins list and a curated table shipped inside the plugin — no remote calls, nothing stored outside your database. The only time anything travels is when YOU click the Alignment Review link: the detected platform names ride along as URL parameters to pre-fill the first questions of the assessment.
 
 = What happens to the llms.txt file if I uninstall the plugin? =
 
@@ -129,6 +137,11 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 
 == Changelog ==
 
+= 1.4.0 =
+* Added: Stack Sense — a new Stack tab on the Tools page maps your active plugins into ten alignment categories with plain-English observations (split intake, missing CRM, automation compounding, SEO tool present but schema failing, unbridged ecommerce accounting). Local and read-only; deliberately unscored.
+* Added: the Alignment Review deep-link — one click opens the caidance.ai systems assessment with your detected stack already pre-filled.
+* No changes to the scanner, the fixes, or the plugin's zero-external-calls behavior.
+
 = 1.3.0 =
 * Added: the Fix Engine — two more one-click fixes join llms.txt. AI-crawler access surgically removes robots.txt groups that block only AI crawlers, with the complete original file stored for one-click byte-for-byte restore. Organization + WebSite homepage schema are pure output switches built live from your site settings.
 * Added: drift watch — the weekly scan notices when an applied fix stops holding (a deploy removed llms.txt, a migration reverted robots.txt) and offers one-click re-apply. Quiet by design: the alert shows only on the Dashboard and the plugin's own screens.
@@ -157,6 +170,9 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Stack Sense: a new Stack tab reads your installed plugins as an AI operator would — categorized inventory, plain-English observations, and an Alignment Review deep-link pre-filled with what it found. Local-only, unscored, zero external calls.
 
 = 1.3.0 =
 The Fix Engine: three one-click fixes (llms.txt, AI-crawler robots access, homepage schema) with exact previews, byte-for-byte restore, and drift watch. Conflict-aware; still zero external calls.
