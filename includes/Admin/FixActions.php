@@ -2,10 +2,11 @@
 /**
  * admin-post.php handlers for applying and reverting fixes.
  *
- * Thin transport layer: capability check + nonce, delegate to the
- * fixer, stash the result in a short per-user transient, redirect back
- * to the Tools page (which renders the notice). No fix logic lives
- * here — LlmsTxtFixer owns every guard and every write.
+ * Thin, fully generic transport layer: capability check + per-fix nonce,
+ * resolve the fix through FixRegistry, delegate, stash the result in a
+ * short per-user transient, redirect back to the Tools page (which
+ * renders the notice). No fix logic lives here — each fixer owns every
+ * guard and every write.
  *
  * @package Caidance\AiReadiness
  */
@@ -14,12 +15,13 @@ declare(strict_types=1);
 
 namespace Caidance\AiReadiness\Admin;
 
-use Caidance\AiReadiness\Fixer\LlmsTxtFixer;
+use Caidance\AiReadiness\Fixer\FixInterface;
+use Caidance\AiReadiness\Fixer\FixRegistry;
 
 final class FixActions
 {
-    public const APPLY_ACTION  = 'caidance_air_apply_llms_txt';
-    public const REVERT_ACTION = 'caidance_air_revert_llms_txt';
+    public const APPLY_ACTION  = 'caidance_air_apply_fix';
+    public const REVERT_ACTION = 'caidance_air_revert_fix';
 
     private const NOTICE_TTL_SECONDS = 60;
 
@@ -40,22 +42,34 @@ final class FixActions
 
     public function handleApply(): void
     {
-        $this->authorize(self::APPLY_ACTION);
-        $this->finish((new LlmsTxtFixer())->apply());
+        $fix = $this->authorize(self::APPLY_ACTION);
+        $this->finish($fix->apply());
     }
 
     public function handleRevert(): void
     {
-        $this->authorize(self::REVERT_ACTION);
-        $this->finish((new LlmsTxtFixer())->revert());
+        $fix = $this->authorize(self::REVERT_ACTION);
+        $this->finish($fix->revert());
     }
 
-    private function authorize(string $action): void
+    /**
+     * Capability + fix resolution + per-fix nonce. Dies on any failure.
+     */
+    private function authorize(string $action): FixInterface
     {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have permission to manage fixes on this site.', 'caidance-ai-readiness'));
         }
-        check_admin_referer($action);
+
+        $fixId = isset($_POST['fix']) ? sanitize_key((string) wp_unslash($_POST['fix'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified immediately below, scoped to this fix id.
+        $fix   = FixRegistry::get($fixId);
+        if ($fix === null) {
+            wp_die(esc_html__('Unknown fix.', 'caidance-ai-readiness'));
+        }
+
+        check_admin_referer($action . '_' . $fix->id());
+
+        return $fix;
     }
 
     /**
