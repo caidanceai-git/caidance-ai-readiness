@@ -24,7 +24,13 @@ $caidance_air_options = [
     'caidance_air_scan_history',
     'caidance_air_activated_at',
     'caidance_air_welcome_dismissed',
+    'caidance_air_llms_txt_marker',
+    'caidance_air_evidence_log',
 ];
+
+// An llms.txt file created via the First Fix is deliberately NOT deleted
+// here — the owner approved its creation and it is site content. Revert
+// from Tools → Caidance Scan before uninstalling to remove it.
 
 foreach ($caidance_air_options as $caidance_air_option) {
     delete_option($caidance_air_option);

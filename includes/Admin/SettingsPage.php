@@ -28,10 +28,11 @@ final class SettingsPage
     /**
      * The 11 Caidance industries — mirrors the parent set in the
      * mu-plugin Industries constant. Sub-verticals are not exposed in v1.
+     * Public: LlmsTxtContentBuilder reads it for the industry label.
      *
      * @var array<string, string>
      */
-    private const INDUSTRIES = [
+    public const INDUSTRIES = [
         ''                      => '— Select your industry —',
         'financial-services'    => 'Financial Services',
         'healthcare'            => 'Healthcare',

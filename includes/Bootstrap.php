@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Caidance\AiReadiness;
 
 use Caidance\AiReadiness\Admin\DashboardWidget;
+use Caidance\AiReadiness\Admin\FixActions;
 use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
 use Caidance\AiReadiness\Rest\ScanController;
@@ -72,6 +73,7 @@ final class Bootstrap
             (new SettingsPage())->register();
             (new DashboardWidget())->register();
             (new ToolsPage())->register();
+            (new FixActions())->register();
         }
 
         // WP-CLI smoke-test command. Lets us run a scan from SSH and

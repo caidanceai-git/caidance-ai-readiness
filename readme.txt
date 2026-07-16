@@ -4,11 +4,11 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-See what AI says about your site. A free 60-second scan + a clear top-3 fix list, all inside your WordPress admin.
+See what AI says about your site — a free 60-second scan, a clear fix list, and the first fix applied for you, with your approval.
 
 == Description ==
 
@@ -35,13 +35,24 @@ Ten local checks run against your site:
 
 Each check returns a clear pass / partial / fail with a plain-English explanation. No jargon, no false alarms.
 
+= The First Fix — llms.txt, applied for you =
+
+Caidance now fixes the first check for you — with your approval, never behind your back:
+
+1. If your site has no llms.txt (and nothing else serves one), the failed check offers **Preview the fix**.
+2. You see the exact file Caidance will create — built from your real site name, tagline, industry, and key pages. Nothing is written yet.
+3. Click **Approve & apply**. Caidance writes the file, re-checks your site, and shows the before/after — your score moves immediately.
+4. Changed your mind? **One click reverses it.** Caidance deletes only the exact file it wrote, verified by content hash.
+
+Every apply and revert lands in a local, append-only evidence log. If an SEO plugin (Yoast, Rank Math, AIOSEO) or an existing file already provides llms.txt, Caidance detects it and steps aside — it never overwrites or duplicates what you already have.
+
 = Industry-aware fix list =
 
 Pick your industry from 11 options — Financial Services, Healthcare, Legal, Home Services, Nonprofit, Professional Services, Manufacturing, eCommerce, SaaS, Education, Local Retail & Restaurants — and the fix recommendations are tailored. The fix you see is the fix that actually matters in your industry.
 
 = What this plugin does NOT do =
 
-* It does not auto-fix anything. The plugin shows you the gaps; you (or your developer) close them. No invisible changes to your site.
+* It changes nothing without your approval. The plugin applies exactly one fix today — creating llms.txt — and only after you have seen the exact file content and clicked approve. Every other check remains show-you-the-gap. One click reverses the fix, and every action lands in a local evidence log. No invisible changes, ever.
 * It does not require a Caidance account. Install, scan, see your score.
 * It does not phone home. Zero external HTTP calls. Results are stored in your own WordPress database.
 
@@ -64,6 +75,18 @@ For paid layers (Toolkit, Monitoring), see [caidance.ai/pricing](https://caidanc
 = Does this plugin send my data anywhere? =
 
 No. The scanner runs entirely in PHP against your own site. Results are stored in your WordPress database. Nothing is sent to Caidance or any third party.
+
+= What exactly does Caidance change on my site? =
+
+Today, exactly one thing, and only with your approval: it can create an llms.txt file at your site root. You preview the exact file content first, nothing is written until you click approve, the result is re-checked and recorded in a local evidence log, and one click reverses it. Everything else the plugin does is read-only.
+
+= Will the fix overwrite my existing llms.txt or conflict with my SEO plugin? =
+
+No. The fix is create-only: it runs only when no llms.txt exists and nothing else on your site serves one. If Yoast SEO, Rank Math, All in One SEO, or an existing file already provides /llms.txt, Caidance names what it found and leaves it alone.
+
+= What happens to the llms.txt file if I uninstall the plugin? =
+
+The file stays — you approved its creation and it is your site content. If you want it removed, use Revert this fix on the Tools page before uninstalling (revert deletes the file only if it still exactly matches what Caidance wrote).
 
 = Do I need a Caidance account? =
 
@@ -105,6 +128,13 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 
 == Changelog ==
 
+= 1.2.0 =
+* Added: the First Fix — Caidance can now create your llms.txt for you. Preview the exact file, approve it, and the plugin writes it, re-checks your site, and shows the before/after score.
+* Added: one-click revert — the plugin deletes only the exact file it wrote, verified by content hash first.
+* Added: conflict detection — an existing llms.txt file, or an SEO plugin already serving one (Yoast, Rank Math, AIOSEO), is detected, named, and left alone.
+* Added: a local, append-only fix evidence log (who, when, what changed, before/after score) on the Tools page.
+* Still zero external calls — the fix, the verification, and the log all run entirely on your site.
+
 = 1.1.0 =
 * Added: optional link from your results to the AI Visibility Cost Calculator (see the estimated revenue impact of your score).
 * Added: optional Caidance Pilot card (continuous monitoring + AI advisor, $9.95/mo).
@@ -119,6 +149,9 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+The First Fix: Caidance can now create your llms.txt — preview the exact file, approve, verified after, one-click revert. Create-only and conflict-aware; still zero external calls.
 
 = 1.1.0 =
 Adds two optional cards under your scan results: the free AI Visibility Cost Calculator link and the Caidance Pilot (monitoring + advisor). Checks and scoring unchanged.
