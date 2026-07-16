@@ -134,6 +134,8 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 1. The Dashboard widget — your AI-readiness score, band, and top 3 fixes at a glance.
 2. The full readout at Tools → Caidance Scan — all 10 checks with pass/partial/fail and plain-English explanations.
 3. The Settings page — pick your industry, run a scan, see your scan history.
+4. Stack Sense — your active plugins mapped into alignment categories, plain-English observations, and the Alignment Review link that arrives pre-filled.
+5. A fix preview — the AI-crawler robots.txt fix shows the exact lines it will remove and the byte-for-byte resulting file before you approve. One click restores the original.
 
 == Changelog ==
 
