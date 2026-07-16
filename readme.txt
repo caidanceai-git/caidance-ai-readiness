@@ -4,7 +4,7 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -87,7 +87,7 @@ It looks at your `robots.txt` and checks whether five major AI crawlers are allo
 
 = Does this work with WooCommerce? =
 
-The 10 universal checks all work on a WooCommerce site. A future version (1.1) will add WooCommerce-specific checks (product schema, breadcrumbs, review aggregates).
+The 10 universal checks all work on a WooCommerce site. A future version will add WooCommerce-specific checks (product schema, breadcrumbs, review aggregates).
 
 = Does this work on a Multisite Network? =
 
@@ -105,6 +105,11 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 
 == Changelog ==
 
+= 1.1.0 =
+* Added: optional link from your results to the AI Visibility Cost Calculator (see the estimated revenue impact of your score).
+* Added: optional Caidance Pilot card (continuous monitoring + AI advisor, $9.95/mo).
+* No changes to the checks, scoring, or the plugin's local-only behavior (still zero external calls).
+
 = 1.0.0 =
 * Initial release.
 * 10 local AI-readiness checks (llms.txt, schema family, OG/Twitter, canonical, sitemap, AI-crawler access).
@@ -114,6 +119,9 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds two optional cards under your scan results: the free AI Visibility Cost Calculator link and the Caidance Pilot (monitoring + advisor). Checks and scoring unchanged.
 
 = 1.0.0 =
 First public release.

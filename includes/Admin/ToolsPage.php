@@ -102,6 +102,10 @@ final class ToolsPage
                     }
                 }
 
+                // Optional bridge cards: calculator (Quantify) + Pilot connect. Full results page only — not the widget.
+                echo ResultRenderer::renderCalculatorBridge($band); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                echo ResultRenderer::renderPilotConnect($band); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+
                 echo ResultRenderer::renderScoreHistory($history, 4); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             endif;
             ?>

@@ -31,6 +31,13 @@ final class ResultRenderer
         'fail'    => ['color' => '#d63638', 'label' => 'Fail'],
     ];
 
+    private const CALCULATOR_BRIDGE_LEADS = [
+        'starter'  => 'Sites at the Starter level tend to forfeit the most AI-driven demand — when buyers ask ChatGPT, Claude, or Perplexity for a recommendation, they rarely come up at all.',
+        'builder'  => 'Sites at the Builder level are visible to AI tools but easy to pass over — a meaningful share of AI-driven demand likely flows to competitors that read more clearly.',
+        'operator' => 'Sites at the Operator level have the fundamentals in place — what is left unfixed is usually what separates being listed from being recommended.',
+        'leader'   => 'Leader-level sites have done the hard work — the open question is what the few remaining gaps are worth in dollars each year.',
+    ];
+
     /**
      * Renders the headline score chip: "39 / 60 — Operator" with band-colored background.
      */
@@ -174,6 +181,57 @@ final class ResultRenderer
             );
         }
         $html .= '</ul>';
+        return $html;
+    }
+
+    /**
+     * Renders the band-aware bridge card to the AI Visibility Cost
+     * Calculator on caidance.ai. Qualitative by design — the plugin has no
+     * revenue inputs, so it never shows a dollar amount itself; the
+     * calculator (a free crawl, no sign-up) is where the estimate happens.
+     */
+    public static function renderCalculatorBridge(string $band): string
+    {
+        $lead = self::CALCULATOR_BRIDGE_LEADS[$band]
+            ?? 'Every gap in these checks is a share of AI-driven demand your site may be forfeiting.';
+
+        $url = 'https://caidance.ai/ai-visibility-calculator/'
+            . '?utm_source=wp_plugin&utm_medium=plugin_results'
+            . '&utm_campaign=wp_v11_at_risk_teaser&utm_content=' . rawurlencode($band);
+
+        $html  = '<div style="border:1px solid #c3c4c7;border-radius:4px;padding:16px 18px;margin:18px 0 0;background:#fff;max-width:640px;">';
+        $html .= '<h3 style="margin:0 0 8px;">What is this score costing you?</h3>';
+        $html .= sprintf('<p style="margin:0 0 10px;color:#1d2327;">%s</p>', esc_html($lead));
+        $html .= '<p style="margin:0 0 12px;color:#1d2327;">See your estimated dollar figure &mdash; Caidance crawls your live site and translates the gap into an annual revenue number, in about a minute. Estimated, always &mdash; and no sign-up needed.</p>';
+        $html .= sprintf(
+            '<a class="button button-primary" href="%s" target="_blank" rel="noopener noreferrer">See the dollar figure</a>',
+            esc_url($url)
+        );
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Renders the Caidance Pilot connect card. Copy is the frozen message
+     * spine adapted verbatim. Optional by design — no locked results, no
+     * admin-wide nags; the plugin stays fully useful without it.
+     */
+    public static function renderPilotConnect(string $band): string
+    {
+        $url = 'https://caidance.ai/start-monitoring/'
+            . '?utm_source=wp_plugin&utm_medium=plugin_results'
+            . '&utm_campaign=wp_v11_pilot_connect&utm_content=' . rawurlencode($band);
+
+        $html  = '<div style="border:1px solid #c3c4c7;border-radius:4px;padding:16px 18px;margin:12px 0 0;background:#f6f7f7;max-width:640px;">';
+        $html .= '<h3 style="margin:0 0 8px;">Put your score on autopilot</h3>';
+        $html .= '<p style="margin:0 0 12px;color:#1d2327;">Caidance watches how AI sees your business, tells you what it&#8217;s costing you, and guides the fixes &mdash; for $9.95 a month. Cancel anytime.</p>';
+        $html .= sprintf(
+            '<a class="button" href="%s" target="_blank" rel="noopener noreferrer">Connect Caidance Monitoring &mdash; $9.95/mo</a>',
+            esc_url($url)
+        );
+        $html .= '</div>';
+
         return $html;
     }
 }
