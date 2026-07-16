@@ -4,11 +4,11 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-See what AI says about your site — a free 60-second scan, a clear fix list, and the first fix applied for you, with your approval.
+See what AI says about your site — a free 60-second scan, a clear fix list, and one-click fixes applied with your approval.
 
 == Description ==
 
@@ -35,16 +35,17 @@ Ten local checks run against your site:
 
 Each check returns a clear pass / partial / fail with a plain-English explanation. No jargon, no false alarms.
 
-= The First Fix — llms.txt, applied for you =
+= The Fix Engine — three one-click fixes, applied for you =
 
-Caidance now fixes the first check for you — with your approval, never behind your back:
+Caidance now closes three of its checks for you — always with your approval, never behind your back:
 
-1. If your site has no llms.txt (and nothing else serves one), the failed check offers **Preview the fix**.
-2. You see the exact file Caidance will create — built from your real site name, tagline, industry, and key pages. Nothing is written yet.
-3. Click **Approve & apply**. Caidance writes the file, re-checks your site, and shows the before/after — your score moves immediately.
-4. Changed your mind? **One click reverses it.** Caidance deletes only the exact file it wrote, verified by content hash.
+* **llms.txt** — creates the file AI agents check first, built from your real site name, tagline, industry, and key pages. Create-only: an existing file or an SEO plugin serving one is detected, named, and left alone.
+* **AI-crawler access** — surgically removes robots.txt groups that block only AI crawlers (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended). The complete original file is stored first; one click restores it byte-for-byte. Groups covering other crawlers are never auto-edited.
+* **Organization + WebSite schema** — outputs homepage JSON-LD built live from your real site settings. A pure output switch: no files written, revert is instant, and it goes silent automatically if you install an SEO plugin.
 
-Every apply and revert lands in a local, append-only evidence log. If an SEO plugin (Yoast, Rank Math, AIOSEO) or an existing file already provides llms.txt, Caidance detects it and steps aside — it never overwrites or duplicates what you already have.
+Every fix follows the same flow: preview the exact change → approve → Caidance applies it, re-checks your site, and shows the before/after score → one click reverses it. Every apply, revert, and refusal lands in a local, append-only evidence log.
+
+And the weekly scan now watches for **drift**: if an applied fix stops holding — a deploy removed your llms.txt, a migration reverted robots.txt — Caidance flags it and offers the one-click re-apply.
 
 = Industry-aware fix list =
 
@@ -52,7 +53,7 @@ Pick your industry from 11 options — Financial Services, Healthcare, Legal, Ho
 
 = What this plugin does NOT do =
 
-* It changes nothing without your approval. The plugin applies exactly one fix today — creating llms.txt — and only after you have seen the exact file content and clicked approve. Every other check remains show-you-the-gap. One click reverses the fix, and every action lands in a local evidence log. No invisible changes, ever.
+* It changes nothing without your approval. Every fix shows you the exact change first — the file content, the precise lines, the exact markup — and applies only when you click approve. One click reverses each fix, every action lands in a local evidence log, and anything owned by another tool (an existing file, an SEO plugin's output) is detected and left alone. No invisible changes, ever.
 * It does not require a Caidance account. Install, scan, see your score.
 * It does not phone home. Zero external HTTP calls. Results are stored in your own WordPress database.
 
@@ -78,11 +79,11 @@ No. The scanner runs entirely in PHP against your own site. Results are stored i
 
 = What exactly does Caidance change on my site? =
 
-Today, exactly one thing, and only with your approval: it can create an llms.txt file at your site root. You preview the exact file content first, nothing is written until you click approve, the result is re-checked and recorded in a local evidence log, and one click reverses it. Everything else the plugin does is read-only.
+Only the three fixes above, and only with your approval: it can create an llms.txt file, remove AI-crawler-only blocks from robots.txt (storing the complete original for one-click restore), and switch on homepage Organization/WebSite JSON-LD output. You preview the exact change first, nothing happens until you click approve, the result is re-checked and recorded in a local evidence log, and one click reverses each. Everything else the plugin does is read-only.
 
-= Will the fix overwrite my existing llms.txt or conflict with my SEO plugin? =
+= Will the fixes overwrite my files or conflict with my SEO plugin? =
 
-No. The fix is create-only: it runs only when no llms.txt exists and nothing else on your site serves one. If Yoast SEO, Rank Math, All in One SEO, or an existing file already provides /llms.txt, Caidance names what it found and leaves it alone.
+No. Every fix is conflict-aware. llms.txt is create-only — an existing file or a plugin serving one is left alone. robots.txt edits never touch groups that cover non-AI crawlers, and the original file is stored for byte-for-byte restore. Schema output defers to Yoast SEO, Rank Math, All in One SEO, The SEO Framework, SEOPress, and Slim SEO — and goes silent automatically if you install one later.
 
 = What happens to the llms.txt file if I uninstall the plugin? =
 
@@ -128,6 +129,13 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 
 == Changelog ==
 
+= 1.3.0 =
+* Added: the Fix Engine — two more one-click fixes join llms.txt. AI-crawler access surgically removes robots.txt groups that block only AI crawlers, with the complete original file stored for one-click byte-for-byte restore. Organization + WebSite homepage schema are pure output switches built live from your site settings.
+* Added: drift watch — the weekly scan notices when an applied fix stops holding (a deploy removed llms.txt, a migration reverted robots.txt) and offers one-click re-apply. Quiet by design: the alert shows only on the Dashboard and the plugin's own screens.
+* Added: standing conflict guards — schema output goes silent automatically if an SEO plugin is installed later; robots.txt groups covering non-AI crawlers are never auto-edited; mixed cases get precise manual guidance instead.
+* Improved: all fixes now run on one shared framework with the identical preview → approve → verify → revert flow and the same evidence log.
+* Still zero external calls — every fix, verification, and log entry runs entirely on your site.
+
 = 1.2.0 =
 * Added: the First Fix — Caidance can now create your llms.txt for you. Preview the exact file, approve it, and the plugin writes it, re-checks your site, and shows the before/after score.
 * Added: one-click revert — the plugin deletes only the exact file it wrote, verified by content hash first.
@@ -149,6 +157,9 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+The Fix Engine: three one-click fixes (llms.txt, AI-crawler robots access, homepage schema) with exact previews, byte-for-byte restore, and drift watch. Conflict-aware; still zero external calls.
 
 = 1.2.0 =
 The First Fix: Caidance can now create your llms.txt — preview the exact file, approve, verified after, one-click revert. Create-only and conflict-aware; still zero external calls.

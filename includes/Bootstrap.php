@@ -11,12 +11,15 @@ declare(strict_types=1);
 namespace Caidance\AiReadiness;
 
 use Caidance\AiReadiness\Admin\DashboardWidget;
+use Caidance\AiReadiness\Admin\DriftNotice;
 use Caidance\AiReadiness\Admin\FixActions;
 use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
+use Caidance\AiReadiness\Fixer\FixRegistry;
 use Caidance\AiReadiness\Fixer\SchemaOutputter;
 use Caidance\AiReadiness\Rest\ScanController;
 use Caidance\AiReadiness\Scanner\LocalScanner;
+use Caidance\AiReadiness\Storage\EvidenceLog;
 use Caidance\AiReadiness\Storage\ScanHistoryRepository;
 
 final class Bootstrap
@@ -79,6 +82,7 @@ final class Bootstrap
             (new DashboardWidget())->register();
             (new ToolsPage())->register();
             (new FixActions())->register();
+            (new DriftNotice())->register();
         }
 
         // WP-CLI smoke-test command. Lets us run a scan from SSH and
@@ -125,5 +129,63 @@ final class Bootstrap
 
         $result = LocalScanner::buildDefault()->run();
         $repo->saveScan($result);
+        self::detectFixDrift($result);
+    }
+
+    /**
+     * Compares every applied fix against the fresh weekly scan. A fix
+     * that no longer holds (file vanished in a deploy, output hidden by
+     * a cache or a conflicting change) gets flagged: an evidence entry
+     * on first detection plus the screen-gated admin notice, with the
+     * one-click re-apply waiting on the Tools page. Flags for fixes
+     * that hold again clear automatically on the next scan.
+     *
+     * @param array<string, mixed> $scanResult
+     */
+    public static function detectFixDrift(array $scanResult): void
+    {
+        $rows = [];
+        foreach (($scanResult['results'] ?? []) as $row) {
+            if (is_array($row) && isset($row['checkId'])) {
+                $rows[(string) $row['checkId']] = $row;
+            }
+        }
+
+        $flags = [];
+        foreach (FixRegistry::all() as $checkId => $fix) {
+            $row         = $rows[$checkId] ?? null;
+            $status      = $fix->status($row);
+            $checkStatus = is_array($row) ? (string) ($row['status'] ?? '') : '';
+
+            $detail = '';
+            if (!empty($status['stale_marker'])) {
+                $detail = 'The applied fix has disappeared — a deploy, migration, or cleanup may have removed it.';
+            } elseif (($status['state'] ?? '') === 'applied_by_us' && $row !== null && $checkStatus !== 'pass') {
+                $detail = 'The fix is still in place, but the check no longer passes — a cache layer or a conflicting change may be hiding it.';
+            }
+
+            if ($detail !== '') {
+                $flags[$checkId] = [
+                    'label'       => $fix->label(),
+                    'detail'      => $detail,
+                    'detected_at' => current_time('mysql'),
+                ];
+            }
+        }
+
+        $existing = get_option(DriftNotice::OPTION, []);
+        $existing = is_array($existing) ? $existing : [];
+
+        foreach ($flags as $checkId => $flag) {
+            if (!isset($existing[$checkId])) {
+                (new EvidenceLog())->append([
+                    'event'   => 'drift_detected',
+                    'fix'     => (string) $checkId,
+                    'details' => $flag['label'] . ': ' . $flag['detail'] . ' Detected by the weekly scan.',
+                ]);
+            }
+        }
+
+        update_option(DriftNotice::OPTION, $flags, false);
     }
 }
