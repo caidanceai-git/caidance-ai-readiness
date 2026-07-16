@@ -14,6 +14,7 @@ use Caidance\AiReadiness\Admin\DashboardWidget;
 use Caidance\AiReadiness\Admin\FixActions;
 use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
+use Caidance\AiReadiness\Fixer\SchemaOutputter;
 use Caidance\AiReadiness\Rest\ScanController;
 use Caidance\AiReadiness\Scanner\LocalScanner;
 use Caidance\AiReadiness\Storage\ScanHistoryRepository;
@@ -64,6 +65,10 @@ final class Bootstrap
         // REST endpoint must register on every request (wp-json context
         // is not is_admin). Permission_callback gates actual usage.
         (new ScanController())->register();
+
+        // Schema-fix front-end output (Organization / WebSite JSON-LD on
+        // the front page while the matching option is enabled).
+        SchemaOutputter::register();
 
         // Weekly cron handler. Scheduled in onActivation; this is the
         // listener that actually runs the scan when WP-Cron fires.

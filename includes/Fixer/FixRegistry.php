@@ -21,8 +21,10 @@ final class FixRegistry
     public static function all(): array
     {
         return [
-            LlmsTxtFixer::CHECK_ID        => new LlmsTxtFixer(),
-            RobotsAiAccessFixer::CHECK_ID => new RobotsAiAccessFixer(),
+            LlmsTxtFixer::CHECK_ID            => new LlmsTxtFixer(),
+            RobotsAiAccessFixer::CHECK_ID     => new RobotsAiAccessFixer(),
+            OrganizationSchemaFixer::CHECK_ID => new OrganizationSchemaFixer(),
+            WebSiteSchemaFixer::CHECK_ID      => new WebSiteSchemaFixer(),
         ];
     }
 
