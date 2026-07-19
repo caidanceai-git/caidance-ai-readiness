@@ -74,6 +74,10 @@ final class Bootstrap
         // the front page while the matching option is enabled).
         SchemaOutputter::register();
 
+        // Sitemap-fix front-end output (the standing Sitemap line on the
+        // WordPress-generated robots.txt while the option is enabled).
+        RobotsSitemapOutputter::register();
+
         // Weekly cron handler. Scheduled in onActivation; this is the
         // listener that actually runs the scan when WP-Cron fires.
         add_action('caidance_air_weekly_scan', [self::class, 'runScheduledScan']);
