@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace Caidance\AiReadiness\Scanner;
 
 use Caidance\AiReadiness\Http\SiteFetcher;
+use Caidance\AiReadiness\Storage\ScanHistoryRepository;
 use Caidance\AiReadiness\Scanner\Checks\AiCrawlerCheck;
 use Caidance\AiReadiness\Scanner\Checks\ArticleSchemaCheck;
 use Caidance\AiReadiness\Scanner\Checks\AuthorSchemaCheck;
@@ -36,6 +37,14 @@ use Caidance\AiReadiness\Scanner\Checks\WebSiteSchemaCheck;
 final class LocalScanner
 {
     public const TARGET_MAX_SCORE = 60;
+
+    /**
+     * When this many checks (or more) come back unverified — the scanner
+     * blocked by the site's own firewall/CDN — a score computed from the
+     * few remaining checks would be meaningless, so the scan reports the
+     * score as unavailable instead.
+     */
+    public const SCORE_UNAVAILABLE_AT = 3;
 
     public const BAND_STARTER  = 'starter';
     public const BAND_BUILDER  = 'builder';
@@ -62,6 +71,15 @@ final class LocalScanner
     /**
      * Runs all registered checks and returns the full scan output.
      *
+     * Before the checks run, BlockageDetector decides whether the
+     * scanner itself is being blocked by the site's firewall/CDN (using
+     * the homepage + robots.txt fetches the checks share anyway). Checks
+     * then report "unverified" instead of a false "fail" for fetches
+     * that look blocked. Unverified checks are excluded from BOTH
+     * total_score and max_possible, and when SCORE_UNAVAILABLE_AT or
+     * more checks are unverified the whole score is reported as
+     * unavailable (score_available = false, band = '').
+     *
      * @return array{
      *   results: array<int, array{checkId: string, checkLabel: string, status: string, score: int, explanation: string, fixHint: string}>,
      *   total_score: int,
@@ -69,28 +87,68 @@ final class LocalScanner
      *   target_max: int,
      *   band: string,
      *   checks_run: int,
+     *   unverified_count: int,
+     *   score_available: bool,
+     *   scanner_blocked: bool,
+     *   blockage_reason: string,
      *   ran_at: string
      * }
      */
     public function run(): array
     {
-        $results = [];
-        $total   = 0;
+        $history        = (new ScanHistoryRepository())->getHistory();
+        $blockageReason = BlockageDetector::evaluate($this->fetcher, $history);
+        if ($blockageReason !== '') {
+            $this->fetcher->flagScannerBlocked($blockageReason);
+        }
+
+        $results    = [];
+        $total      = 0;
+        $unverified = 0;
 
         foreach ($this->checks as $check) {
             $result    = $check->run();
             $results[] = $result->toArray();
-            $total    += $result->score();
+            if ($result->status === CheckResult::STATUS_UNVERIFIED) {
+                $unverified++;
+            } else {
+                $total += $result->score();
+            }
+        }
+
+        // Blockage discovered mid-scan (e.g. the homepage was readable
+        // but post fetches were challenged): surface the first recorded
+        // challenge signature as the evidence.
+        if ($blockageReason === '' && $unverified > 0) {
+            $blockageReason = $this->fetcher->firstChallengeSignal();
+        }
+
+        $maxPossible    = (count($this->checks) - $unverified) * 6;
+        $scoreAvailable = $unverified < self::SCORE_UNAVAILABLE_AT;
+
+        $band = '';
+        if ($scoreAvailable) {
+            $bandBasis = $total;
+            if ($unverified > 0 && $maxPossible > 0) {
+                // Pro-rate to the 0–60 band scale so excluded (blocked)
+                // checks cannot drag the band down.
+                $bandBasis = (int) round($total * self::TARGET_MAX_SCORE / $maxPossible);
+            }
+            $band = self::bandForScore($bandBasis);
         }
 
         return [
-            'results'      => $results,
-            'total_score'  => $total,
-            'max_possible' => count($this->checks) * 6,
-            'target_max'   => self::TARGET_MAX_SCORE,
-            'band'         => self::bandForScore($total),
-            'checks_run'   => count($this->checks),
-            'ran_at'       => current_time('mysql'),
+            'results'          => $results,
+            'total_score'      => $total,
+            'max_possible'     => $maxPossible,
+            'target_max'       => self::TARGET_MAX_SCORE,
+            'band'             => $band,
+            'checks_run'       => count($this->checks),
+            'unverified_count' => $unverified,
+            'score_available'  => $scoreAvailable,
+            'scanner_blocked'  => $blockageReason !== '',
+            'blockage_reason'  => $blockageReason,
+            'ran_at'           => current_time('mysql'),
         ];
     }
 
@@ -164,6 +222,13 @@ final class LocalScanner
                     JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
                 )
             );
+            if (!empty($output['scanner_blocked'])) {
+                \WP_CLI::warning(sprintf(
+                    'Scanner blocked — %d check(s) unverified and excluded from the score. Evidence: %s',
+                    (int) ($output['unverified_count'] ?? 0),
+                    (string) ($output['blockage_reason'] ?? '')
+                ));
+            }
             \WP_CLI::success(sprintf(
                 'Scan complete. Score: %d / %d (%d of %d checks run). Band: %s.',
                 (int) $output['total_score'],
