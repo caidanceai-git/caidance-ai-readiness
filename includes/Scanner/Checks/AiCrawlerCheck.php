@@ -54,8 +54,17 @@ final class AiCrawlerCheck extends AbstractCheck
     {
         $robots = $this->fetcher->get($this->fetcher->urlFor('/robots.txt'));
 
-        // No robots.txt means everything is allowed by default per the spec.
         if (!$robots['ok']) {
+            // A blocked fetch proves nothing about robots.txt — without
+            // this test, a firewall challenge here would count as a
+            // spurious pass (the "everything allowed" branch below).
+            if ($this->fetchLooksBlocked($robots)) {
+                return $this->unverified(
+                    'Could not verify AI crawler access: the robots.txt scan request appears to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
+
+            // No robots.txt means everything is allowed by default per the spec.
             return $this->pass(
                 'No robots.txt is served, so all crawlers — including AI crawlers — are allowed by default.'
             );

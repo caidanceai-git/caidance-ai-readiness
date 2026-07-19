@@ -40,14 +40,18 @@ final class CanonicalCheck extends AbstractCheck
 
     public function run(): CheckResult
     {
-        $checked     = 0;
-        $missing     = 0;
-        $mismatched  = 0;
-        $mismatchUrl = '';
+        $checked        = 0;
+        $missing        = 0;
+        $mismatched     = 0;
+        $mismatchUrl    = '';
+        $blockedFetches = 0;
 
         foreach ($this->urlsToCheck() as $url) {
             $resp = $this->fetcher->get($url);
             if (!$resp['ok']) {
+                if ($this->fetchLooksBlocked($resp)) {
+                    $blockedFetches++;
+                }
                 continue;
             }
 
@@ -68,6 +72,11 @@ final class CanonicalCheck extends AbstractCheck
         }
 
         if ($checked === 0) {
+            if ($blockedFetches > 0) {
+                return $this->unverified(
+                    'Could not verify canonical tags: the scan requests appear to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'Could not fetch any pages to inspect canonical tags.',
                 'Verify your homepage is publicly accessible.'

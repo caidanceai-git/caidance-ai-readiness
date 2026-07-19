@@ -38,6 +38,11 @@ final class LlmsTxtCheck extends AbstractCheck
         $response = $this->fetcher->get($this->fetcher->urlFor('/llms.txt'));
 
         if (!$response['ok']) {
+            if ($this->fetchLooksBlocked($response)) {
+                return $this->unverified(
+                    'Could not verify llms.txt: the scan request appears to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'Your site does not serve an /llms.txt file. AI agents look for this file first to understand what your business is and where to find your most important pages.',
                 'Create a plain-text llms.txt at the root of your site that tells AI agents what your business is and links to your most important pages.'

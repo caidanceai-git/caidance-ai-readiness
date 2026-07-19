@@ -49,10 +49,14 @@ final class OpenGraphCheck extends AbstractCheck
         $totalKeysFound   = 0;
         $totalKeysNeeded  = 0;
         $pagesWithAllKeys = 0;
+        $blockedFetches   = 0;
 
         foreach ($this->urlsToCheck() as $url) {
             $resp = $this->fetcher->get($url);
             if (!$resp['ok']) {
+                if ($this->fetchLooksBlocked($resp)) {
+                    $blockedFetches++;
+                }
                 continue;
             }
 
@@ -74,6 +78,11 @@ final class OpenGraphCheck extends AbstractCheck
         }
 
         if ($pagesChecked === 0) {
+            if ($blockedFetches > 0) {
+                return $this->unverified(
+                    'Could not verify Open Graph tags: the scan requests appear to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'Could not fetch your homepage to inspect Open Graph tags.',
                 'Verify your homepage is publicly accessible.'

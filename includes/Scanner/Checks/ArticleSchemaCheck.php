@@ -60,6 +60,7 @@ final class ArticleSchemaCheck extends AbstractCheck
 
         $sampled         = 0;
         $withCompleteSchema = 0;
+        $blockedFetches  = 0;
 
         foreach ($posts as $post) {
             $permalink = (string) get_permalink($post);
@@ -69,6 +70,9 @@ final class ArticleSchemaCheck extends AbstractCheck
 
             $resp = $this->fetcher->get($permalink);
             if (!$resp['ok']) {
+                if ($this->fetchLooksBlocked($resp)) {
+                    $blockedFetches++;
+                }
                 continue;
             }
 
@@ -90,6 +94,11 @@ final class ArticleSchemaCheck extends AbstractCheck
         }
 
         if ($sampled === 0) {
+            if ($blockedFetches > 0) {
+                return $this->unverified(
+                    'Could not verify Article schema: the scan requests for your recent posts appear to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'Unable to fetch any of your recent posts to inspect schema.',
                 'Verify your post URLs are publicly accessible.'

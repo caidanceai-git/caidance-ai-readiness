@@ -38,6 +38,11 @@ final class OrganizationSchemaCheck extends AbstractCheck
         $home = $this->fetcher->get($this->fetcher->homeUrl());
 
         if (!$home['ok']) {
+            if ($this->fetchLooksBlocked($home)) {
+                return $this->unverified(
+                    'Could not verify Organization schema: the homepage scan request appears to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'Cannot fetch your homepage to inspect schema.',
                 'Verify your homepage is publicly accessible (no auth wall, no firewall blocking).'

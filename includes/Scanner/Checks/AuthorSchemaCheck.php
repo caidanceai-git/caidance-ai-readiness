@@ -65,6 +65,8 @@ final class AuthorSchemaCheck extends AbstractCheck
         $articleSampled    = 0;
         $personAuthors     = 0;
         $stringOnlyAuthors = 0;
+        $fetchedPosts      = 0;
+        $blockedFetches    = 0;
 
         foreach ($posts as $post) {
             $permalink = (string) get_permalink($post);
@@ -74,9 +76,13 @@ final class AuthorSchemaCheck extends AbstractCheck
 
             $resp = $this->fetcher->get($permalink);
             if (!$resp['ok']) {
+                if ($this->fetchLooksBlocked($resp)) {
+                    $blockedFetches++;
+                }
                 continue;
             }
 
+            $fetchedPosts++;
             $nodes    = JsonLdExtractor::extract($resp['body']);
             $articles = $this->findArticleNodes($nodes);
 
@@ -95,6 +101,11 @@ final class AuthorSchemaCheck extends AbstractCheck
         }
 
         if ($articleSampled === 0) {
+            if ($fetchedPosts === 0 && $blockedFetches > 0) {
+                return $this->unverified(
+                    'Could not verify Author schema: the scan requests for your recent posts appear to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'No Article schema was found on recent posts to inspect for author. Fix Article schema first.',
                 'Enable Article schema in your SEO plugin (see the Article Schema check). Author schema sits inside Article schema.'

@@ -39,13 +39,20 @@ final class FaqSchemaCheck extends AbstractCheck
 
     public function run(): CheckResult
     {
-        $urls = $this->candidateUrls();
+        $urls           = $this->candidateUrls();
+        $fetched        = 0;
+        $blockedFetches = 0;
 
         foreach ($urls as $url) {
             $resp = $this->fetcher->get($url);
             if (!$resp['ok']) {
+                if ($this->fetchLooksBlocked($resp)) {
+                    $blockedFetches++;
+                }
                 continue;
             }
+
+            $fetched++;
 
             $nodes    = JsonLdExtractor::extract($resp['body']);
             $faqPages = JsonLdExtractor::findByType($nodes, 'FAQPage');
@@ -71,6 +78,12 @@ final class FaqSchemaCheck extends AbstractCheck
                     $questionCount
                 ),
                 'Add more questions to your FAQ page. Aim for 5–10 of the questions your customers actually ask.'
+            );
+        }
+
+        if ($fetched === 0 && $blockedFetches > 0) {
+            return $this->unverified(
+                'Could not verify FAQPage schema: the scan requests appear to be blocked by your firewall or CDN, so this check is excluded from your score.'
             );
         }
 

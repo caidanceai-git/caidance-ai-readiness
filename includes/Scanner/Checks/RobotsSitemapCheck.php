@@ -37,6 +37,11 @@ final class RobotsSitemapCheck extends AbstractCheck
         $robots = $this->fetcher->get($this->fetcher->urlFor('/robots.txt'));
 
         if (!$robots['ok']) {
+            if ($this->fetchLooksBlocked($robots)) {
+                return $this->unverified(
+                    'Could not verify robots.txt: the scan request appears to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->fail(
                 'Your site does not serve a /robots.txt file, so a Sitemap directive cannot be declared.',
                 'Generate a robots.txt that includes a Sitemap: line pointing at your XML sitemap.'
@@ -52,16 +57,25 @@ final class RobotsSitemapCheck extends AbstractCheck
             );
         }
 
-        $reachable = false;
+        $reachable      = false;
+        $sitemapBlocked = false;
         foreach ($sitemapUrls as $url) {
             $resp = $this->fetcher->get($url);
             if ($resp['ok']) {
                 $reachable = true;
                 break;
             }
+            if ($this->fetchLooksBlocked($resp)) {
+                $sitemapBlocked = true;
+            }
         }
 
         if (!$reachable) {
+            if ($sitemapBlocked) {
+                return $this->unverified(
+                    'robots.txt declares a Sitemap, but the scan request for it appears to be blocked by your firewall or CDN, so this check is excluded from your score.'
+                );
+            }
             return $this->partial(
                 'robots.txt declares a Sitemap, but the URL does not respond. AI agents will not be able to fetch it.',
                 'Verify your sitemap URL is correct and publicly accessible (no auth, no firewall block).'
