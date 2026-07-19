@@ -26,9 +26,10 @@ final class ResultRenderer
     ];
 
     private const STATUS_PRESENTATION = [
-        'pass'    => ['color' => '#00a32a', 'label' => 'Pass'],
-        'partial' => ['color' => '#dba617', 'label' => 'Partial'],
-        'fail'    => ['color' => '#d63638', 'label' => 'Fail'],
+        'pass'       => ['color' => '#00a32a', 'label' => 'Pass'],
+        'partial'    => ['color' => '#dba617', 'label' => 'Partial'],
+        'fail'       => ['color' => '#d63638', 'label' => 'Fail'],
+        'unverified' => ['color' => '#646970', 'label' => 'Unverified'],
     ];
 
     private const CALCULATOR_BRIDGE_LEADS = [
@@ -37,6 +38,90 @@ final class ResultRenderer
         'operator' => 'Sites at the Operator level have the fundamentals in place — what is left unfixed is usually what separates being listed from being recommended.',
         'leader'   => 'Leader-level sites have done the hard work — the open question is what the few remaining gaps are worth in dollars each year.',
     ];
+
+    /**
+     * Renders the right badge for a stored scan: the normal score chip,
+     * or the gray "Score unavailable" chip when the scan was blocked
+     * badly enough that a score would be meaningless (score_available
+     * false — see LocalScanner::SCORE_UNAVAILABLE_AT). Scans stored
+     * before the blockage-detection release lack the key and default to
+     * available.
+     *
+     * @param array<string, mixed> $scan
+     */
+    public static function renderScoreBadgeForScan(array $scan): string
+    {
+        if (isset($scan['score_available']) && $scan['score_available'] === false) {
+            return self::renderScoreUnavailableBadge();
+        }
+        return self::renderScoreBadge(
+            (int) ($scan['total_score'] ?? 0),
+            (int) ($scan['max_possible'] ?? 0),
+            (string) ($scan['band'] ?? '')
+        );
+    }
+
+    /**
+     * The gray headline chip shown instead of a score when the scanner
+     * was blocked: a number computed from the few reachable checks
+     * would read as a collapse that never happened.
+     */
+    public static function renderScoreUnavailableBadge(): string
+    {
+        return '<div style="display:inline-block;padding:12px 20px;border-radius:8px;background:#646970;color:#fff;font-weight:600;">'
+            . '<span style="font-size:24px;line-height:1;">Score unavailable</span>'
+            . ' <span style="margin-left:8px;opacity:0.9;">&mdash; scanner blocked</span>'
+            . '</div>';
+    }
+
+    /**
+     * Renders the plain-English scanner-blocked banner for a stored
+     * scan, or '' when the scan was not blocked. Shown above the
+     * results on every surface that shows the scan.
+     *
+     * @param array<string, mixed> $scan
+     */
+    public static function renderBlockedBannerForScan(array $scan): string
+    {
+        if (empty($scan['scanner_blocked'])) {
+            return '';
+        }
+        return self::renderBlockedBanner(
+            (string) ($scan['blockage_reason'] ?? ''),
+            (int) ($scan['unverified_count'] ?? 0)
+        );
+    }
+
+    /**
+     * The banner itself: likely cause in plain English, the evidence
+     * the detector saw, and the reassurance that blocked checks are
+     * excluded from the score rather than counted as failing.
+     */
+    public static function renderBlockedBanner(string $reason, int $unverifiedCount): string
+    {
+        $html  = '<div style="border:1px solid #dba617;border-left-width:4px;border-radius:4px;padding:14px 16px;margin:0 0 14px;background:#fcf9e8;max-width:860px;">';
+        $html .= '<p style="margin:0 0 8px;color:#1d2327;">'
+            . '<strong>The scan could not read your site.</strong> '
+            . 'Your firewall or CDN (e.g. Cloudflare bot protection) appears to be challenging automated requests &mdash; including this scanner&#8217;s, and possibly AI crawlers&#8217;. '
+            . 'Check your Cloudflare security/bot settings or allowlist your own server, then re-run the scan.'
+            . '</p>';
+        if ($reason !== '') {
+            $html .= sprintf(
+                '<p style="margin:0 0 8px;color:#646970;font-size:13px;">What was detected: %s</p>',
+                esc_html($reason)
+            );
+        }
+        if ($unverifiedCount > 0) {
+            $html .= sprintf(
+                '<p style="margin:0;color:#646970;font-size:13px;">%d check%s could not be verified and %s excluded from your score &mdash; blocked is not the same as failing. Your last readable scan stays in your scan history.</p>',
+                $unverifiedCount,
+                $unverifiedCount === 1 ? '' : 's',
+                $unverifiedCount === 1 ? 'is' : 'are'
+            );
+        }
+        $html .= '</div>';
+        return $html;
+    }
 
     /**
      * Renders the headline score chip: "39 / 60 — Operator" with band-colored background.
@@ -86,9 +171,11 @@ final class ResultRenderer
             '<strong style="flex:1;">%s</strong>',
             esc_html($checkLabel)
         );
+        // Unverified checks are excluded from the score — "0 / 6" would
+        // read as failing, so the row shows a dash instead.
         $html .= sprintf(
-            '<span style="color:#646970;font-variant-numeric:tabular-nums;">%d / 6</span>',
-            $score
+            '<span style="color:#646970;font-variant-numeric:tabular-nums;">%s / 6</span>',
+            $status === 'unverified' ? '&mdash;' : (string) $score
         );
         $html .= '</div>';
 
@@ -131,6 +218,13 @@ final class ResultRenderer
         $top = array_slice($needsFix, 0, $limit);
 
         if ($top === []) {
+            $unverified = count(array_filter(
+                $results,
+                static fn(array $r): bool => ($r['status'] ?? '') === 'unverified'
+            ));
+            if ($unverified > 0) {
+                return '<p style="color:#646970;font-weight:600;">No verifiable fixes this scan — the scanner was blocked. See the full readout for details.</p>';
+            }
             return '<p style="color:#00a32a;font-weight:600;">All checks passing — no fixes needed.</p>';
         }
 
@@ -167,6 +261,18 @@ final class ResultRenderer
             $max   = (int) ($entry['max_possible'] ?? 0);
             $band  = (string) ($entry['band'] ?? '');
             $bandLabel = self::BAND_PRESENTATION[$band]['label'] ?? ucfirst($band);
+
+            if (isset($entry['score_available']) && $entry['score_available'] === false) {
+                $html .= sprintf(
+                    '<li style="padding:6px 0;border-bottom:1px solid #f0f0f1;color:#646970;">'
+                    . '<code style="margin-right:12px;">%s</code>'
+                    . '<strong>&mdash;</strong>'
+                    . ' &mdash; <span>scanner blocked, score unavailable</span>'
+                    . '</li>',
+                    esc_html($ranAt)
+                );
+                continue;
+            }
 
             $html .= sprintf(
                 '<li style="padding:6px 0;border-bottom:1px solid #f0f0f1;color:#1d2327;">'

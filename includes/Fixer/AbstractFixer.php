@@ -62,9 +62,12 @@ abstract class AbstractFixer implements FixInterface
             }
         }
         return [
-            'total_score' => (int) ($scan['total_score'] ?? 0),
-            'band'        => (string) ($scan['band'] ?? ''),
-            'check'       => $row,
+            'total_score'     => (int) ($scan['total_score'] ?? 0),
+            'band'            => (string) ($scan['band'] ?? ''),
+            // Scans stored before blockage detection lack the key —
+            // they were always full-score scans, so default true.
+            'score_available' => !isset($scan['score_available']) || (bool) $scan['score_available'],
+            'check'           => $row,
         ];
     }
 
@@ -87,6 +90,11 @@ abstract class AbstractFixer implements FixInterface
     /**
      * Success-result builder shared by apply()/revert().
      *
+     * A snapshot from a scanner-blocked scan (score_available false)
+     * yields a null score rather than a collapsed number — otherwise a
+     * firewall challenge during the post-apply re-scan would show a
+     * false "Your score: 48 → 6" in the fix notice.
+     *
      * @param array<string, mixed>|null $before
      * @param array<string, mixed>|null $after
      * @return array{ok: bool, code: string, message: string, score_before: int|null, score_after: int|null}
@@ -97,9 +105,23 @@ abstract class AbstractFixer implements FixInterface
             'ok'           => true,
             'code'         => $code,
             'message'      => $message,
-            'score_before' => is_array($before) && isset($before['total_score']) ? (int) $before['total_score'] : null,
-            'score_after'  => is_array($after) && isset($after['total_score']) ? (int) $after['total_score'] : null,
+            'score_before' => $this->usableScore($before),
+            'score_after'  => $this->usableScore($after),
         ];
+    }
+
+    /**
+     * @param array<string, mixed>|null $snapshot
+     */
+    private function usableScore(?array $snapshot): ?int
+    {
+        if (!is_array($snapshot) || !isset($snapshot['total_score'])) {
+            return null;
+        }
+        if (isset($snapshot['score_available']) && $snapshot['score_available'] === false) {
+            return null;
+        }
+        return (int) $snapshot['total_score'];
     }
 
     /**

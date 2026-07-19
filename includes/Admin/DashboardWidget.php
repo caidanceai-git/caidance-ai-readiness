@@ -71,17 +71,15 @@ final class DashboardWidget
         }
 
         // Branch 3: scan has run — show score + band + top 3 fixes.
-        $score   = (int) ($latest['total_score'] ?? 0);
-        $max     = (int) ($latest['max_possible'] ?? 0);
-        $band    = (string) ($latest['band'] ?? 'starter');
         $ranAt   = (string) ($latest['ran_at'] ?? '');
         $results = is_array($latest['results'] ?? null) ? $latest['results'] : [];
         $toolsUrl = admin_url('tools.php?page=' . ToolsPage::MENU_SLUG);
         $snapshotUrl = 'https://caidance.ai/snapshot/?utm_source=wp_plugin&utm_medium=dashboard_widget&utm_campaign=wp_org_v1';
 
         ?>
+        <?php echo ResultRenderer::renderBlockedBannerForScan($latest); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         <p style="margin:0 0 10px;">
-            <?php echo ResultRenderer::renderScoreBadge($score, $max, $band); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php echo ResultRenderer::renderScoreBadgeForScan($latest); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         </p>
         <p style="margin:0 0 12px;color:#646970;font-size:12px;">
             <?php

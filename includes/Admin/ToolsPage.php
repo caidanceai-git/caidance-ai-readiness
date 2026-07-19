@@ -92,14 +92,15 @@ final class ToolsPage
                     </a>
                 </p>
             <?php else:
-                $score   = (int) ($latest['total_score'] ?? 0);
-                $max     = (int) ($latest['max_possible'] ?? 0);
                 $band    = (string) ($latest['band'] ?? 'starter');
                 $ranAt   = (string) ($latest['ran_at'] ?? '');
                 $results = is_array($latest['results'] ?? null) ? $latest['results'] : [];
                 ?>
+                <div style="margin-top:16px;">
+                    <?php echo ResultRenderer::renderBlockedBannerForScan($latest); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </div>
                 <p style="margin-top:16px;">
-                    <?php echo ResultRenderer::renderScoreBadge($score, $max, $band); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <?php echo ResultRenderer::renderScoreBadgeForScan($latest); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </p>
                 <p style="color:#646970;">
                     <?php

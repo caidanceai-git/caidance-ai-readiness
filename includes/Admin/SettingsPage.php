@@ -280,15 +280,13 @@ final class SettingsPage
      */
     private function renderLatestResults(array $latest): string
     {
-        $score   = (int) ($latest['total_score'] ?? 0);
-        $max     = (int) ($latest['max_possible'] ?? 0);
-        $band    = (string) ($latest['band'] ?? 'starter');
         $ranAt   = (string) ($latest['ran_at'] ?? '');
         $results = is_array($latest['results'] ?? null) ? $latest['results'] : [];
 
         $html  = '<h3 style="margin-top:24px;">Latest scan</h3>';
         $html .= '<p style="color:#646970;">Ran at <code>' . esc_html($ranAt) . '</code></p>';
-        $html .= '<p>' . ResultRenderer::renderScoreBadge($score, $max, $band) . '</p>';
+        $html .= ResultRenderer::renderBlockedBannerForScan($latest);
+        $html .= '<p>' . ResultRenderer::renderScoreBadgeForScan($latest) . '</p>';
 
         foreach ($results as $result) {
             if (is_array($result)) {

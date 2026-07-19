@@ -300,8 +300,10 @@ final class StackDetector
                 continue;
             }
             $checkId = (string) ($row['checkId'] ?? '');
+            // 'unverified' means the scanner was blocked, not that the
+            // schema is failing — it must not trip this observation.
             if (in_array($checkId, ['organization_schema', 'website_schema'], true)
-                && ($row['status'] ?? '') !== 'pass'
+                && !in_array((string) ($row['status'] ?? ''), ['pass', 'unverified'], true)
             ) {
                 return true;
             }
