@@ -4,7 +4,7 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,7 +39,7 @@ Each check returns a clear pass / partial / fail with a plain-English explanatio
 
 Caidance now closes three of its checks for you — always with your approval, never behind your back:
 
-* **llms.txt** — creates the file AI agents check first, built from your real site name, tagline, industry, and key pages. Create-only: an existing file or an SEO plugin serving one is detected, named, and left alone.
+* **llms.txt** — creates the file AI agents check first, built from your real site name, tagline, industry, and a curated key-page list: cart, checkout, account, and legal boilerplate are excluded, homepage duplicates collapse into one Home line, and on WooCommerce stores the shop page and top product category and brand pages lead. Create-only: an existing file or an SEO plugin serving one is detected, named, and left alone.
 * **AI-crawler access** — surgically removes robots.txt groups that block only AI crawlers (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended). The complete original file is stored first; one click restores it byte-for-byte. Groups covering other crawlers are never auto-edited.
 * **Organization + WebSite schema** — outputs homepage JSON-LD built live from your real site settings. A pure output switch: no files written, revert is instant, and it goes silent automatically if you install an SEO plugin.
 
@@ -119,7 +119,7 @@ It looks at your `robots.txt` and checks whether five major AI crawlers are allo
 
 = Does this work with WooCommerce? =
 
-The 10 universal checks all work on a WooCommerce site. A future version will add WooCommerce-specific checks (product schema, breadcrumbs, review aggregates).
+The 10 universal checks all work on a WooCommerce site, and the llms.txt fix is store-aware: it reads your assigned WooCommerce pages so cart, checkout, and account never appear in the file, and it features your shop page plus your top product category and brand pages instead — the pages an AI shopping agent actually needs. A future version will add WooCommerce-specific checks (product schema, breadcrumbs, review aggregates).
 
 = Does this work on a Multisite Network? =
 
@@ -138,6 +138,11 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 5. A fix preview — the AI-crawler robots.txt fix shows the exact lines it will remove and the byte-for-byte resulting file before you approve. One click restores the original.
 
 == Changelog ==
+
+= 1.4.1 =
+* Improved: the llms.txt fix now curates its Key pages list instead of listing the first pages it finds. Cart, checkout, account, legal boilerplate, and thank-you pages are excluded — detected via your assigned WordPress/WooCommerce page settings plus slug patterns, so leftover duplicates like cart-2 are caught too. Homepage aliases collapse into the one canonical Home line, and meaningful pages (about, contact, services, resources) are preferred.
+* Improved: on WooCommerce stores the list now leads with your shop page and your top product category and brand pages — the pages an AI shopping agent actually needs. Picking eCommerce or Local Retail & Restaurants as your industry ranks category pages higher still.
+* Unchanged: the fix remains preview-first, create-only, hash-verified, and one-click revertable. An llms.txt already applied on 1.4.0 is untouched — revert and re-apply if you want the improved file. Still zero external calls.
 
 = 1.4.0 =
 * Added: Stack Sense — a new Stack tab on the Tools page maps your active plugins into ten alignment categories with plain-English observations (split intake, missing CRM, automation compounding, SEO tool present but schema failing, unbridged ecommerce accounting). Local and read-only; deliberately unscored.
@@ -172,6 +177,9 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.4.1 =
+Better llms.txt files: cart/checkout/legal clutter and duplicate homepage links are gone, and WooCommerce stores lead with shop, category, and brand pages. Same preview-first, reversible fix; still zero external calls.
 
 = 1.4.0 =
 Stack Sense: a new Stack tab reads your installed plugins as an AI operator would — categorized inventory, plain-English observations, and an Alignment Review deep-link pre-filled with what it found. Local-only, unscored, zero external calls.
