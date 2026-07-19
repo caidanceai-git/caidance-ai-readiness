@@ -53,7 +53,7 @@ final class RobotsSitemapCheck extends AbstractCheck
         if ($sitemapUrls === []) {
             return $this->fail(
                 'robots.txt is served but does not declare a Sitemap: directive. Crawlers may miss content.',
-                'Add a "Sitemap: https://yoursite.com/sitemap.xml" line to robots.txt pointing at your XML sitemap.'
+                'Add a "Sitemap: https://yoursite.com/sitemap.xml" line to robots.txt pointing at your XML sitemap. SEO plugins that replace the WordPress core sitemaps often drop this line without telling you — Caidance can add it back with one click on the Tools page.'
             );
         }
 

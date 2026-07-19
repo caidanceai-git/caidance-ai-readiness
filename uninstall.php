@@ -27,6 +27,8 @@ $caidance_air_options = [
     'caidance_air_llms_txt_marker',
     'caidance_air_evidence_log',
     'caidance_air_robots_fix_marker',
+    'caidance_air_robots_sitemap_enabled',
+    'caidance_air_robots_sitemap_marker',
     'caidance_air_org_schema_enabled',
     'caidance_air_org_schema_marker',
     'caidance_air_website_schema_enabled',

@@ -4,7 +4,7 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.4.2
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,11 +35,12 @@ Ten local checks run against your site:
 
 Each check returns a clear pass / partial / fail with a plain-English explanation — and when your own firewall or CDN blocks the scan itself, checks report Unverified and stay out of your score instead of pretending to fail. No jargon, no false alarms.
 
-= The Fix Engine — three one-click fixes, applied for you =
+= The Fix Engine — four one-click fixes, applied for you =
 
-Caidance now closes three of its checks for you — always with your approval, never behind your back:
+Caidance now closes four of its checks for you — always with your approval, never behind your back:
 
 * **llms.txt** — creates the file AI agents check first, built from your real site name, tagline, industry, and a curated key-page list: cart, checkout, account, and legal boilerplate are excluded, homepage duplicates collapse into one Home line, and on WooCommerce stores the shop page and top product category and brand pages lead. Create-only: an existing file or an SEO plugin serving one is detected, named, and left alone.
+* **Sitemap declaration** — appends the missing `Sitemap:` line to robots.txt. The sitemap URL is verified live first (your SEO plugin's index, else the WordPress core sitemap — it must load and be real sitemap XML before the fix is even offered). Works in both robots.txt states: a physical file gets the append with the complete original stored for byte-for-byte restore; a WordPress-generated robots.txt gets a standing output line with no file written and instant revert. Never adds a second line next to an existing declaration.
 * **AI-crawler access** — surgically removes robots.txt groups that block only AI crawlers (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended). The complete original file is stored first; one click restores it byte-for-byte. Groups covering other crawlers are never auto-edited.
 * **Organization + WebSite schema** — outputs homepage JSON-LD built live from your real site settings. A pure output switch: no files written, revert is instant, and it goes silent automatically if you install an SEO plugin.
 
@@ -83,11 +84,11 @@ No. The scanner runs entirely in PHP against your own site. Results are stored i
 
 = What exactly does Caidance change on my site? =
 
-Only the three fixes above, and only with your approval: it can create an llms.txt file, remove AI-crawler-only blocks from robots.txt (storing the complete original for one-click restore), and switch on homepage Organization/WebSite JSON-LD output. You preview the exact change first, nothing happens until you click approve, the result is re-checked and recorded in a local evidence log, and one click reverses each. Everything else the plugin does is read-only.
+Only the four fixes above, and only with your approval: it can create an llms.txt file, declare your verified sitemap in robots.txt, remove AI-crawler-only blocks from robots.txt (storing the complete original for one-click restore), and switch on homepage Organization/WebSite JSON-LD output. You preview the exact change first, nothing happens until you click approve, the result is re-checked and recorded in a local evidence log, and one click reverses each. Everything else the plugin does is read-only.
 
 = Will the fixes overwrite my files or conflict with my SEO plugin? =
 
-No. Every fix is conflict-aware. llms.txt is create-only — an existing file or a plugin serving one is left alone. robots.txt edits never touch groups that cover non-AI crawlers, and the original file is stored for byte-for-byte restore. Schema output defers to Yoast SEO, Rank Math, All in One SEO, The SEO Framework, SEOPress, and Slim SEO — and goes silent automatically if you install one later.
+No. Every fix is conflict-aware. llms.txt is create-only — an existing file or a plugin serving one is left alone. robots.txt edits never touch groups that cover non-AI crawlers, and the original file is stored for byte-for-byte restore. The Sitemap fix declares only a sitemap that actually responded when checked, prefers your SEO plugin's own sitemap, and steps back automatically if anything else already declares one. Schema output defers to Yoast SEO, Rank Math, All in One SEO, The SEO Framework, SEOPress, and Slim SEO — and goes silent automatically if you install one later.
 
 = Does the Stack tab send my plugin list anywhere? =
 
@@ -143,6 +144,13 @@ Firewall and CDN bot protection (Cloudflare Bot Fight Mode, for example) sometim
 
 == Changelog ==
 
+= 1.5.0 =
+* Added: a fourth one-click fix — the missing Sitemap declaration in robots.txt. Caidance verifies your sitemap actually loads first (your SEO plugin's index, e.g. Yoast's /sitemap_index.xml, else the WordPress core /wp-sitemap.xml — it must respond with real sitemap XML before an approve button ever appears), shows the exact resulting robots.txt, and appends one line on approval.
+* Added: both robots.txt states handled — a physical file gets the append with the complete original stored for byte-for-byte restore; a WordPress-generated robots.txt gets a standing output line with no file written and instant revert.
+* Added: a standing never-duplicate guard — if anything else declares a Sitemap line (core sitemaps, an SEO plugin, your own edit), Caidance steps back automatically. Drift watch flags the fix if the line stops being served and offers one-click re-apply.
+* Why this fix: SEO plugins that replace the WordPress core sitemaps also remove core's automatic Sitemap line from robots.txt — and most never re-add their own. The sitemap is fine; the one-line declaration is what goes missing.
+* Still zero external calls — detection, verification, and the fix all run against your own site.
+
 = 1.4.2 =
 * Fixed: firewall/CDN bot protection (e.g. Cloudflare) challenging the scanner's own requests no longer collapses your score. Blocked checks now report a fourth outcome — Unverified — excluded from the 0–60 score entirely: blocked is not the same as failing.
 * Added: blockage detection with three signals — the cf-mitigated challenge header or a known challenge page on the response; robots.txt reachable while page fetches fail; and a sudden all-fetch failure right after a scan that could read the site (treated as blockage, not regression). A clean 404 still counts as a real miss.
@@ -188,6 +196,9 @@ Firewall and CDN bot protection (Cloudflare Bot Fight Mode, for example) sometim
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Fourth one-click fix: the missing Sitemap declaration in robots.txt. Sitemap verified live first, exact preview, byte-for-byte restore (physical file) or instant-revert output switch (WordPress-generated). Never duplicates an existing declaration; still zero external calls.
 
 = 1.4.2 =
 No more false alarms when your own firewall challenges the scanner: blocked checks are marked Unverified and excluded from the score, a banner names the likely cause, and the drift watch stays quiet until your site is readable again. Zero external calls, as always.

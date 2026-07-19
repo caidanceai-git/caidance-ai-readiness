@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Caidance — AI-Readiness Score
  * Plugin URI:  https://caidance.ai/cdi/?utm_source=wp_plugin&utm_medium=plugin_header&utm_campaign=wp_org_v1
- * Description: See what AI says about your site — and fix it. Scans your WordPress site for AI-readiness signals, shows your CDI-aligned 0–60 score, and applies one-click fixes (llms.txt, AI-crawler access, homepage schema) with your approval — verified, reversible, drift-watched. Powered by Caidance.
- * Version:     1.4.2
+ * Description: See what AI says about your site — and fix it. Scans your WordPress site for AI-readiness signals, shows your CDI-aligned 0–60 score, and applies one-click fixes (llms.txt, sitemap declaration, AI-crawler access, homepage schema) with your approval — verified, reversible, drift-watched. Powered by Caidance.
+ * Version:     1.5.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author:      Caidance
@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin metadata constants.
-define('CAIDANCE_AIR_VERSION', '1.4.2');
+define('CAIDANCE_AIR_VERSION', '1.5.0');
 define('CAIDANCE_AIR_FILE', __FILE__);
 define('CAIDANCE_AIR_DIR', __DIR__);
 define('CAIDANCE_AIR_URL', plugin_dir_url(__FILE__));
