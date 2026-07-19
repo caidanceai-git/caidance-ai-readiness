@@ -16,6 +16,7 @@ use Caidance\AiReadiness\Admin\FixActions;
 use Caidance\AiReadiness\Admin\SettingsPage;
 use Caidance\AiReadiness\Admin\ToolsPage;
 use Caidance\AiReadiness\Fixer\FixRegistry;
+use Caidance\AiReadiness\Fixer\RobotsSitemapOutputter;
 use Caidance\AiReadiness\Fixer\SchemaOutputter;
 use Caidance\AiReadiness\Rest\ScanController;
 use Caidance\AiReadiness\Scanner\LocalScanner;
@@ -140,10 +141,21 @@ final class Bootstrap
      * one-click re-apply waiting on the Tools page. Flags for fixes
      * that hold again clear automatically on the next scan.
      *
+     * A scanner-blocked scan proves nothing about drift — the scanner
+     * could not read the site, so "the check no longer passes" is the
+     * firewall talking, not the fix failing. Blocked scans raise no new
+     * flags AND leave existing flags untouched (they cannot prove a
+     * flagged fix recovered either); the next readable scan
+     * re-evaluates everything for real.
+     *
      * @param array<string, mixed> $scanResult
      */
     public static function detectFixDrift(array $scanResult): void
     {
+        if (!empty($scanResult['scanner_blocked'])) {
+            return;
+        }
+
         $rows = [];
         foreach (($scanResult['results'] ?? []) as $row) {
             if (is_array($row) && isset($row['checkId'])) {
@@ -160,7 +172,9 @@ final class Bootstrap
             $detail = '';
             if (!empty($status['stale_marker'])) {
                 $detail = 'The applied fix has disappeared — a deploy, migration, or cleanup may have removed it.';
-            } elseif (($status['state'] ?? '') === 'applied_by_us' && $row !== null && $checkStatus !== 'pass') {
+            } elseif (($status['state'] ?? '') === 'applied_by_us' && $row !== null
+                && $checkStatus !== 'pass' && $checkStatus !== 'unverified'
+            ) {
                 $detail = 'The fix is still in place, but the check no longer passes — a cache layer or a conflicting change may be hiding it.';
             }
 
