@@ -4,7 +4,7 @@ Tags: ai, schema, ai-search, aeo, llms-txt
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,7 +33,7 @@ Ten local checks run against your site:
 9. **Canonical tags** — to prevent duplicate-content confusion
 10. **AI crawler access** — does robots.txt allow GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, and Google-Extended? (Toggleable.)
 
-Each check returns a clear pass / partial / fail with a plain-English explanation. No jargon, no false alarms.
+Each check returns a clear pass / partial / fail with a plain-English explanation — and when your own firewall or CDN blocks the scan itself, checks report Unverified and stay out of your score instead of pretending to fail. No jargon, no false alarms.
 
 = The Fix Engine — three one-click fixes, applied for you =
 
@@ -129,6 +129,10 @@ Single-site only for v1. Multisite Network support is on the roadmap.
 
 Yes. The scan reads your site the same way an AI crawler would — including any HTML your cache layer serves.
 
+= My score suddenly collapsed and checks say the scanner is blocked =
+
+Firewall and CDN bot protection (Cloudflare Bot Fight Mode, for example) sometimes challenges the plugin's own scan requests — the same way it challenges other automated clients. Since 1.4.2 the scanner detects this instead of failing the checks: affected checks are marked Unverified and excluded from your score, a banner explains what was detected, and the weekly drift watch stays quiet until the site is readable again. Check your firewall or CDN bot settings, or allowlist requests from your own server, then re-run the scan. Worth knowing: if the scanner is being challenged, real AI crawlers may be too.
+
 == Screenshots ==
 
 1. The Dashboard widget — your AI-readiness score, band, and top 3 fixes at a glance.
@@ -138,6 +142,13 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 5. A fix preview — the AI-crawler robots.txt fix shows the exact lines it will remove and the byte-for-byte resulting file before you approve. One click restores the original.
 
 == Changelog ==
+
+= 1.4.2 =
+* Fixed: firewall/CDN bot protection (e.g. Cloudflare) challenging the scanner's own requests no longer collapses your score. Blocked checks now report a fourth outcome — Unverified — excluded from the 0–60 score entirely: blocked is not the same as failing.
+* Added: blockage detection with three signals — the cf-mitigated challenge header or a known challenge page on the response; robots.txt reachable while page fetches fail; and a sudden all-fetch failure right after a scan that could read the site (treated as blockage, not regression). A clean 404 still counts as a real miss.
+* Added: a plain-English banner naming the likely cause (your firewall or CDN challenging automated requests — including this scanner's, and possibly AI crawlers') plus the exact evidence detected. When 3 or more checks are blocked, the score shows as unavailable instead of a misleading number.
+* Fixed: the weekly drift watch no longer warns that applied fixes "stopped holding" when the scan was blocked — existing drift flags are preserved untouched until a scan can actually read the site.
+* Still zero external calls — detection runs entirely on responses the scan already fetched plus your stored scan history.
 
 = 1.4.1 =
 * Improved: the llms.txt fix now curates its Key pages list instead of listing the first pages it finds. Cart, checkout, account, legal boilerplate, and thank-you pages are excluded — detected via your assigned WordPress/WooCommerce page settings plus slug patterns, so leftover duplicates like cart-2 are caught too. Homepage aliases collapse into the one canonical Home line, and meaningful pages (about, contact, services, resources) are preferred.
@@ -177,6 +188,9 @@ Yes. The scan reads your site the same way an AI crawler would — including any
 * Weekly automated re-scan with 12-scan history.
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+No more false alarms when your own firewall challenges the scanner: blocked checks are marked Unverified and excluded from the score, a banner names the likely cause, and the drift watch stays quiet until your site is readable again. Zero external calls, as always.
 
 = 1.4.1 =
 Better llms.txt files: cart/checkout/legal clutter and duplicate homepage links are gone, and WooCommerce stores lead with shop, category, and brand pages. Same preview-first, reversible fix; still zero external calls.
